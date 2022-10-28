@@ -120,7 +120,7 @@ export default function Apps() {
                 <InputGroup maxW={850}>
                     <InputLeftElement
                     pointerEvents='none'
-                    children={<Icon as={BiSearch} w={6} h={6} color='#4a4848'/>}
+                    // children={<Icon as={BiSearch} w={6} h={6} color='#4a4848'/>}
                     />
                     <Input type='text' placeholder='Search' />
                 </InputGroup>
