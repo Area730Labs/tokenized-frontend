@@ -70,7 +70,7 @@ export default function LayerBlock(props: {item: {layerName: string, images: any
 
             {item.images.map((img:{url:string, imageName: string, layerRarity: number}, index:number) => {
                 return (
-                    <Flex backgroundColor='#21212105' marginTop='5px' marginBottom='7px'  width='100%' flexDir='row' alignItems='center'  gap='10px' border='1px solid #f0f0f0' padding='7px' borderRadius='5px' >
+                    <Flex key={index} backgroundColor='#21212105' marginTop='5px' marginBottom='7px'  width='100%' flexDir='row' alignItems='center'  gap='10px' border='1px solid #f0f0f0' padding='7px' borderRadius='5px' >
                         <Image src={img.url} height='40px' borderRadius='4px'/>
                         <Text>{img.imageName}</Text>
                         <Spacer/>
