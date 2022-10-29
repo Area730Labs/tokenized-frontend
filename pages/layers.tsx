@@ -3,112 +3,46 @@ import {
     Flex,
     Image,
     Spacer,
-    Text,
-    Button
+    Accordion,
+    Button,
+    useDisclosure
 } from '@chakra-ui/react'
 import Sidebar from '../components/sidebar'
 import ContentHeader from '../components/contentHeader'
-import TitleBlock from '../components/titleBlock'
-import {
-    Accordion,
-    AccordionItem,
-    AccordionButton,
-    AccordionPanel,
-    AccordionIcon,
-    IconButton,
-} from '@chakra-ui/react'
-
 import 
 { 
-    BiPencil,
-    BiTrash,
-    BiTrashAlt,
     BiAddToQueue,
-    BiLockAlt,
-    BiLockOpenAlt,
     BiLayer
 } from "react-icons/bi";
 import { Icon } from '@chakra-ui/react'
-import { Input } from '@chakra-ui/react'
 import LayerBlock from '../components/layerBlock'
 import { useState, useRef, useEffect } from 'react'
-import { ILayer, ILayerImage } from '../state/layerState'
 import { useAppContext } from '../state/appContext'
-import {
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalFooter,
-    ModalBody,
-    ModalCloseButton,
-    useDisclosure,
-    FormControl,
-    FormLabel
-} from '@chakra-ui/react'
+import ChangeLayerNameModal from '../components/modals/changeLayerNameModal'
 
 
 export default function Layers()
 {
-    const {layerData, addLayer} = useAppContext();
-    const { isOpen, onOpen, onClose } = useDisclosure()
-
-    const initialRef = useRef(null)
+    const {layerData, addLayer, setLayerNameModalProps} = useAppContext();
 
     let viewData: any = [];
 
     layerData.map((item, index) => {
         viewData.push(
-            <LayerBlock item={item} key={index} />
+            <LayerBlock item={item} key={index} index={index} />
         );
     });
 
-    // useEffect(() => {
-    //     onOpen();
-    // }, []);
-
-    const createLayer = () => {
-        //@ts-ignore
-        if (!initialRef.current?.value){
-            return;
-        }
-
-        //@ts-ignore
-        addLayer(initialRef.current.value);
-
-        onClose();
-
-        //@ts-ignore
-        initialRef.current.value = '';
+    const onCreateNewLayer = () => {
+        setLayerNameModalProps({
+            createMode: true, 
+            onOkAction: addLayer
+        })
     };
 
     return (
         <Flex dir='row'> 
-            <Modal
-                initialFocusRef={initialRef}
-                isOpen={isOpen}
-                onClose={onClose}
-            >
-                <ModalOverlay />
-                <ModalContent>
-                <ModalHeader>Create layer</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody pb={6}>
-                    <FormControl>
-                    <FormLabel>Layer name</FormLabel>
-                    <Input ref={initialRef} placeholder='Enter layer name' />
-                    </FormControl>
-
-                </ModalBody>
-
-                <ModalFooter>
-                    <Button colorScheme='blue' mr={3} onClick={createLayer}>
-                    Create
-                    </Button>
-                    <Button onClick={onClose}>Cancel</Button>
-                </ModalFooter>
-                </ModalContent>
-            </Modal>
+            <ChangeLayerNameModal  />
 
            <Sidebar/>
 
@@ -120,7 +54,7 @@ export default function Layers()
                         Generate NFTs
                     </Button>
                     <Spacer/>
-                    <Button onClick={onOpen} size='sm' leftIcon={<Icon as={BiAddToQueue} w={5} h={5} color='#ffffff' />} colorScheme='green' variant='solid'>
+                    <Button onClick={onCreateNewLayer} size='sm' leftIcon={<Icon as={BiAddToQueue} w={5} h={5} color='#ffffff' />} colorScheme='green' variant='solid'>
                         Add layer
                     </Button>
                 </Flex>

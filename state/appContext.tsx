@@ -1,6 +1,6 @@
 import { ILayer, ILayerImage } from "./layerState"
 import { createContext, ReactNode, useContext, useState, useMemo, useEffect} from "react";
-
+import { IChangeLayerNameModalProps } from "../components/modals/changeLayerNameModal";
 
 
 export interface AppContextType 
@@ -8,6 +8,13 @@ export interface AppContextType
     layerData: ILayer[],
     addLayer: (layerName: string) => boolean,
     removeLayer: (layerName: string) => boolean,
+    moveLayerUp: (layerIndex: number) => void,
+    moveLayerDown: (layerIndex: number) => void,
+    renameLayer: (layerIndex: number, newName: string) => void
+
+    // Layer name modal
+    setLayerNameModalProps: (props: IChangeLayerNameModalProps) => void,
+    layerNameModalProps: IChangeLayerNameModalProps | null
 }
 
 
@@ -27,6 +34,7 @@ const AppContext = createContext<AppContextType>({} as AppContextType);
 
 export function AppProvider({ children }: { children: ReactNode; }) {
     const [layerData, setLayerData]= useState<ILayer[]>(layerDataDemo);
+    const [layerNameModalProps, setLayerNameModalProps] = useState<IChangeLayerNameModalProps|null>(null);
     
     const removeLayer = (layerName: string):boolean => {
         let exists = false;
@@ -69,10 +77,40 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         return true;
     };
 
+    const moveLayerUp = (layerIndex: number) => {
+        let newArr = [...layerData];
+        const tmp = newArr[layerIndex];
+        newArr[layerIndex] = newArr[layerIndex - 1];
+        newArr[layerIndex - 1] = tmp;
+
+        setLayerData(newArr);
+    };
+
+    const moveLayerDown = (layerIndex: number) => {
+        let newArr = [...layerData];
+        const tmp = newArr[layerIndex];
+        newArr[layerIndex] = newArr[layerIndex + 1];
+        newArr[layerIndex + 1] = tmp;
+
+        setLayerData(newArr);
+    };
+
+    const renameLayer = (layerIndex: number, newName: string) => {
+        let newArr = [...layerData];
+        newArr[layerIndex].layerName = newName;
+        setLayerData(newArr);
+    }
+
+   
     const ctxVal:AppContextType = {
         layerData,
         addLayer,
-        removeLayer
+        removeLayer,
+        moveLayerUp,
+        moveLayerDown,
+        layerNameModalProps,
+        setLayerNameModalProps,
+        renameLayer
     } ;
 
     return (

@@ -5,6 +5,7 @@ import {
     Image,
     Spacer,
     Text,
+    useDisclosure
 } from '@chakra-ui/react'
 import {
     AccordionItem,
@@ -18,6 +19,8 @@ import
     BiPencil,
     BiTrashAlt,
     BiLockOpenAlt,
+    BiChevronUp,
+    BiChevronDown,
 } from "react-icons/bi";
 import { Icon } from '@chakra-ui/react'
 import { Input } from '@chakra-ui/react'
@@ -25,12 +28,21 @@ import { useState } from 'react'
 import { ILayer, ILayerImage } from '../state/layerState';
 import { useAppContext } from '../state/appContext';
 
-export default function LayerBlock(props: {item: ILayer}) 
+
+export default function LayerBlock(props: {item: ILayer, index: number}) 
 {
     const item = props.item;
-    const {removeLayer} = useAppContext();
-
+    const {removeLayer, layerData, moveLayerUp, moveLayerDown, renameLayer} = useAppContext();
+    const {layerNameModalProps, setLayerNameModalProps} = useAppContext()
     const [isHover, setHover] = useState(false);
+
+    const onEdit = () => {
+        setLayerNameModalProps({
+            createMode: false, 
+            onOkAction: (val) => renameLayer(props.index, val),
+            currentName: item.layerName
+        })
+    };
 
     return (
         <AccordionItem>
@@ -48,8 +60,21 @@ export default function LayerBlock(props: {item: ILayer})
                 {item.layerName}
                 </Box>
 
+                {isHover && props.index > 0 && (
+                    <Flex onClick={(e) => { moveLayerUp(props.index); e.preventDefault();}} backgroundColor='#ededed' width='35px' height='35px' marginLeft='10px' borderRadius='5px' alignItems='center' justifyContent='center'>
+                        <Icon as={BiChevronUp} w={4} h={4} color='#4a4a4a' />
+                    </Flex>
+                )}
+
+                {isHover && props.index < layerData.length - 1 && (
+                    <Flex onClick={(e) => {moveLayerDown(props.index); e.preventDefault();}} backgroundColor='#ededed' width='35px' height='35px' marginLeft='10px' borderRadius='5px' alignItems='center' justifyContent='center'>
+                        <Icon as={BiChevronDown} w={4} h={4} color='#4a4a4a' />
+                    </Flex>
+                )}
+
+            
                 {isHover && (
-                    <Flex onClick={(e) => {alert(1); e.preventDefault();}} backgroundColor='#ededed' width='35px' height='35px' marginLeft='20px' borderRadius='5px' alignItems='center' justifyContent='center'>
+                    <Flex onClick={(e) => {onEdit(); e.preventDefault();}} backgroundColor='#ededed' width='35px' height='35px' marginLeft='20px' borderRadius='5px' alignItems='center' justifyContent='center'>
                         <Icon as={BiPencil} w={4} h={4} color='#4a4a4a' />
                     </Flex>
                 )}
