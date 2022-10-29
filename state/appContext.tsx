@@ -1,7 +1,7 @@
 import { ILayer, ILayerImage } from "./layerState"
 import { createContext, ReactNode, useContext, useState, useMemo, useEffect} from "react";
 import { IChangeLayerNameModalProps } from "../components/modals/changeLayerNameModal";
-
+import { IProjectMeta } from "./projectState";
 
 export interface AppContextType 
 {
@@ -14,7 +14,11 @@ export interface AppContextType
 
     // Layer name modal
     setLayerNameModalProps: (props: IChangeLayerNameModalProps) => void,
-    layerNameModalProps: IChangeLayerNameModalProps | null
+    layerNameModalProps: IChangeLayerNameModalProps | null,
+
+    projectMeta: IProjectMeta
+    setProjectName: (projName: string) => void,
+    setProjectFee: (projFee: number) => void
 }
 
 
@@ -35,6 +39,14 @@ const AppContext = createContext<AppContextType>({} as AppContextType);
 export function AppProvider({ children }: { children: ReactNode; }) {
     const [layerData, setLayerData]= useState<ILayer[]>(layerDataDemo);
     const [layerNameModalProps, setLayerNameModalProps] = useState<IChangeLayerNameModalProps|null>(null);
+    const [projectMeta, setProjectMeta] = useState<IProjectMeta>({
+        projectName: 'Demo project', 
+        projectFee: 2.5,
+        blockchain: 'Solana',
+        totalMints: 10_000,
+        minted: 10_000,
+        traitCount: 75
+    });
     
     const removeLayer = (layerName: string):boolean => {
         let exists = false;
@@ -101,6 +113,20 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         setLayerData(newArr);
     }
 
+    const setProjectName = (projName: string) => {
+        let newMeta: IProjectMeta = {...projectMeta};
+        newMeta.projectName = projName;
+
+        setProjectMeta(newMeta);
+    }
+
+    const setProjectFee = (projFee: number) => {
+        let newMeta: IProjectMeta = {...projectMeta};
+        newMeta.projectFee = projFee;
+
+        setProjectMeta(newMeta);
+    }
+
    
     const ctxVal:AppContextType = {
         layerData,
@@ -110,7 +136,10 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         moveLayerDown,
         layerNameModalProps,
         setLayerNameModalProps,
-        renameLayer
+        renameLayer, 
+        projectMeta,
+        setProjectName,
+        setProjectFee
     } ;
 
     return (

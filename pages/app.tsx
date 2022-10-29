@@ -9,6 +9,7 @@ import Sidebar from '../components/sidebar'
 import ContentHeader from '../components/contentHeader'
 import TitleBlock from '../components/titleBlock'
 import { useState } from 'react'
+import { useAppContext } from '../state/appContext'
 
 function selectFile (contentType:any, multiple:any){
     return new Promise(resolve => {
@@ -32,8 +33,11 @@ function selectFile (contentType:any, multiple:any){
 
 const TEST_LOGO = 'https://i.seadn.io/gae/Ju9CkWtV-1Okvf45wo8UctR-M9He2PjILP0oOvxE89AyiPPGtrR3gysu1Zgy0hjd2xKIgjJJtWIc0ybj4Vd7wv8t3pxDGHoJBzDB?auto=format&w=3840';
 
+
 export default function App()
 {
+    const {projectMeta, setProjectName, setProjectFee} = useAppContext()
+
     const [logoUrl, setLogoUrl] = useState(TEST_LOGO);
     const onLogoSelect = async() => {
         let files = await selectFile("image/*", false);
@@ -53,14 +57,13 @@ export default function App()
 
                 <Flex flexDir='column' gap={4} >
 
-                    <TitleBlock title='Project name' value='Bored Ape Yacht Club' hasEdit={true} />
-                    <TitleBlock title='Creator fee' value='2.5%' hasEdit={true} />
+                    <TitleBlock title='Project name' value={projectMeta.projectName} hasEdit={true} onValChanged={setProjectName} />
+                    <TitleBlock title='Creator fee' value={`${projectMeta.projectFee}%`} hasEdit={true} onValChanged={(val) => setProjectFee(+val)} />
 
-
-                    <TitleBlock title='Blockchain' value='Solana' hasEdit={false} />
-                    <TitleBlock title='Total mints' value='10,000' hasEdit={false} />
-                    <TitleBlock title='Minted' value='10,000' hasEdit={false} />
-                    <TitleBlock title='Trait count' value='75' hasEdit={false} />
+                    <TitleBlock title='Blockchain' value={projectMeta.blockchain} hasEdit={false} />
+                    <TitleBlock title='Total mints' value={`${projectMeta.totalMints}`} hasEdit={false} />
+                    <TitleBlock title='Minted' value={`${projectMeta.minted}`} hasEdit={false} />
+                    <TitleBlock title='Trait count' value={`${projectMeta.traitCount}`} hasEdit={false} />
 
                     <Spacer/>
 

@@ -14,7 +14,7 @@ import
 import { Icon } from '@chakra-ui/react'
 import { useState } from 'react';
 
-export default function TitleBlock(props: {title: string, value: string, hasEdit: boolean}) {
+export default function TitleBlock(props: {title: string, value: string, hasEdit: boolean, onValChanged?:(val:string)=>void}) {
 
     const [val, setVal] = useState(props.value);
     const [isEdit, setIsEdit] = useState(false);
@@ -24,8 +24,16 @@ export default function TitleBlock(props: {title: string, value: string, hasEdit
     };
 
     const onApply = () => {
+        if (!val.trim()){
+            return;
+        }
+
         setIsEdit(false);
-    };
+
+        if (props.onValChanged){
+            props.onValChanged(val)
+        }
+    }
 
     const handleChange = (event:any) => setVal(event.target.value)
 
