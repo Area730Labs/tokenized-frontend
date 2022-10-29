@@ -45,7 +45,7 @@ export default function TitleBlock(props: {title: string, value: string, hasEdit
             {isEdit && <Input
                 value={val}
                 onChange={handleChange}
-                placeholder='Here is a sample placeholder'
+                placeholder='Enter value'
                 width={250}
                 size='sm'
             />}

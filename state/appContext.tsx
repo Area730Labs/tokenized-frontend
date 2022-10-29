@@ -7,10 +7,11 @@ export interface AppContextType
 {
     layerData: ILayer[],
     addLayer: (layerName: string) => boolean,
-    removeLayer: (layerName: string) => boolean,
+    removeLayer: (layerName: string) => void,
     moveLayerUp: (layerIndex: number) => void,
     moveLayerDown: (layerIndex: number) => void,
-    renameLayer: (layerIndex: number, newName: string) => void
+    renameLayer: (layerIndex: number, newName: string) => void,
+    removeLayerImage: (layerIndex: number, imageIndex: number) => void
 
     // Layer name modal
     setLayerNameModalProps: (props: IChangeLayerNameModalProps) => void,
@@ -48,22 +49,8 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         traitCount: 75
     });
     
-    const removeLayer = (layerName: string):boolean => {
-        let exists = false;
-
-        layerData.forEach((layer) => {
-            if (layer.layerName === layerName) {
-                exists = true;
-            }
-        })
-
-        if (!exists){
-            return false;
-        }
-
+    const removeLayer = (layerName: string) => {
         setLayerData((prevState) => prevState.filter((item) => item.layerName !== layerName));
-
-        return true;
     };
 
     const addLayer = (layerName: string):boolean => {
@@ -113,6 +100,12 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         setLayerData(newArr);
     }
 
+    const removeLayerImage = (layerIndex: number, imageIndex: number) => {
+        let newArr = [...layerData];
+        newArr[layerIndex].images.splice(imageIndex, 1);
+        setLayerData(newArr);
+    }
+
     const setProjectName = (projName: string) => {
         let newMeta: IProjectMeta = {...projectMeta};
         newMeta.projectName = projName;
@@ -139,7 +132,8 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         renameLayer, 
         projectMeta,
         setProjectName,
-        setProjectFee
+        setProjectFee,
+        removeLayerImage
     } ;
 
     return (

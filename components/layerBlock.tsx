@@ -32,7 +32,7 @@ import { useAppContext } from '../state/appContext';
 export default function LayerBlock(props: {item: ILayer, index: number}) 
 {
     const item = props.item;
-    const {removeLayer, layerData, moveLayerUp, moveLayerDown, renameLayer} = useAppContext();
+    const {removeLayer, layerData, moveLayerUp, moveLayerDown, renameLayer, removeLayerImage} = useAppContext();
     const {layerNameModalProps, setLayerNameModalProps} = useAppContext()
     const [isHover, setHover] = useState(false);
 
@@ -109,7 +109,7 @@ export default function LayerBlock(props: {item: ILayer, index: number})
                             <Icon as={BiLockOpenAlt} w={5} h={5} color='#4a4a4a' />
                         </Flex>
 
-                        <Flex cursor='pointer' onClick={(e) => {alert(1); e.preventDefault();}} backgroundColor='#f03426' width='35px' height='35px' marginLeft='10px' borderRadius='5px' alignItems='center' justifyContent='center'>
+                        <Flex cursor='pointer' onClick={(e) => {removeLayerImage(props.index, index); e.preventDefault();}} backgroundColor='#f03426' width='35px' height='35px' marginLeft='10px' borderRadius='5px' alignItems='center' justifyContent='center'>
                             <Icon as={BiTrashAlt} w={4} h={4} color='#ffffff' />
                         </Flex>
                     </Flex>
