@@ -31,69 +31,29 @@ import
 import { Icon } from '@chakra-ui/react'
 import { Input } from '@chakra-ui/react'
 import LayerBlock from '../components/layerBlock'
+import { useState, useRef, useEffect } from 'react'
+import { ILayer, ILayerImage } from '../state/layerState'
+import { useAppContext } from '../state/appContext'
+import {
+    Modal,
+    ModalOverlay,
+    ModalContent,
+    ModalHeader,
+    ModalFooter,
+    ModalBody,
+    ModalCloseButton,
+    useDisclosure,
+    FormControl,
+    FormLabel
+} from '@chakra-ui/react'
 
 
 export default function Layers()
 {
+    const {layerData, addLayer} = useAppContext();
+    const { isOpen, onOpen, onClose } = useDisclosure()
 
-    const layerData = [
-        {layerName: 'Background', layerRarity: '15', images: [
-            {
-                imageName: 'Bg_1.jpg',
-                url: 'https://img.seadn.io/files/84b7e2e55e4a354a1e8dda5dea15d5ca.png?fit=max&w=2000'
-            },
-            {
-                imageName: 'Bg_1.jpg',
-                url: 'https://img.seadn.io/files/84b7e2e55e4a354a1e8dda5dea15d5ca.png?fit=max&w=2000'
-            },
-            {
-                imageName: 'Bg_1.jpg',
-                url: 'https://img.seadn.io/files/84b7e2e55e4a354a1e8dda5dea15d5ca.png?fit=max&w=2000'
-            }
-        ]},
-        {layerName: 'Heads', layerRarity: '15', images: [
-            {
-                imageName: 'Bg_1.jpg',
-                url: 'https://img.seadn.io/files/84b7e2e55e4a354a1e8dda5dea15d5ca.png?fit=max&w=2000'
-            },
-            {
-                imageName: 'Bg_1.jpg',
-                url: 'https://img.seadn.io/files/84b7e2e55e4a354a1e8dda5dea15d5ca.png?fit=max&w=2000'
-            },
-            {
-                imageName: 'Bg_1.jpg',
-                url: 'https://img.seadn.io/files/84b7e2e55e4a354a1e8dda5dea15d5ca.png?fit=max&w=2000'
-            }
-        ]},
-        {layerName: 'Eyes', layerRarity: '15', images: [
-            {
-                imageName: 'Bg_1.jpg',
-                url: 'https://img.seadn.io/files/84b7e2e55e4a354a1e8dda5dea15d5ca.png?fit=max&w=2000'
-            },
-            {
-                imageName: 'Bg_1.jpg',
-                url: 'https://img.seadn.io/files/84b7e2e55e4a354a1e8dda5dea15d5ca.png?fit=max&w=2000'
-            },
-            {
-                imageName: 'Bg_1.jpg',
-                url: 'https://img.seadn.io/files/84b7e2e55e4a354a1e8dda5dea15d5ca.png?fit=max&w=2000'
-            }
-        ]},
-        {layerName: 'Body', layerRarity: '15', images: [
-            {
-                imageName: 'Bg_1.jpg',
-                url: 'https://img.seadn.io/files/84b7e2e55e4a354a1e8dda5dea15d5ca.png?fit=max&w=2000'
-            },
-            {
-                imageName: 'Bg_1.jpg',
-                url: 'https://img.seadn.io/files/84b7e2e55e4a354a1e8dda5dea15d5ca.png?fit=max&w=2000'
-            },
-            {
-                imageName: 'Bg_1.jpg',
-                url: 'https://img.seadn.io/files/84b7e2e55e4a354a1e8dda5dea15d5ca.png?fit=max&w=2000'
-            }
-        ]}
-    ];
+    const initialRef = useRef(null)
 
     let viewData: any = [];
 
@@ -103,8 +63,53 @@ export default function Layers()
         );
     });
 
+    // useEffect(() => {
+    //     onOpen();
+    // }, []);
+
+    const createLayer = () => {
+        //@ts-ignore
+        if (!initialRef.current?.value){
+            return;
+        }
+
+        //@ts-ignore
+        addLayer(initialRef.current.value);
+
+        onClose();
+
+        //@ts-ignore
+        initialRef.current.value = '';
+    };
+
     return (
         <Flex dir='row'> 
+            <Modal
+                initialFocusRef={initialRef}
+                isOpen={isOpen}
+                onClose={onClose}
+            >
+                <ModalOverlay />
+                <ModalContent>
+                <ModalHeader>Create layer</ModalHeader>
+                <ModalCloseButton />
+                <ModalBody pb={6}>
+                    <FormControl>
+                    <FormLabel>Layer name</FormLabel>
+                    <Input ref={initialRef} placeholder='Enter layer name' />
+                    </FormControl>
+
+                </ModalBody>
+
+                <ModalFooter>
+                    <Button colorScheme='blue' mr={3} onClick={createLayer}>
+                    Create
+                    </Button>
+                    <Button onClick={onClose}>Cancel</Button>
+                </ModalFooter>
+                </ModalContent>
+            </Modal>
+
            <Sidebar/>
 
            <Flex padding='20px' flexDir='column' flexGrow={1} gap={5} height='100vh' alignItems='center' overflowY='scroll' overflowX='hidden'>
@@ -115,7 +120,7 @@ export default function Layers()
                         Generate NFTs
                     </Button>
                     <Spacer/>
-                    <Button size='sm' leftIcon={<Icon as={BiAddToQueue} w={5} h={5} color='#ffffff' />} colorScheme='green' variant='solid'>
+                    <Button onClick={onOpen} size='sm' leftIcon={<Icon as={BiAddToQueue} w={5} h={5} color='#ffffff' />} colorScheme='green' variant='solid'>
                         Add layer
                     </Button>
                 </Flex>

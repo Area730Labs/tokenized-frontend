@@ -22,10 +22,13 @@ import
 import { Icon } from '@chakra-ui/react'
 import { Input } from '@chakra-ui/react'
 import { useState } from 'react'
+import { ILayer, ILayerImage } from '../state/layerState';
+import { useAppContext } from '../state/appContext';
 
-export default function LayerBlock(props: {item: {layerName: string, images: any}}) 
+export default function LayerBlock(props: {item: ILayer}) 
 {
     const item = props.item;
+    const {removeLayer} = useAppContext();
 
     const [isHover, setHover] = useState(false);
 
@@ -52,7 +55,7 @@ export default function LayerBlock(props: {item: {layerName: string, images: any
                 )}
                 
                 {isHover && (
-                    <Flex onClick={(e) => {alert(1); e.preventDefault();}} backgroundColor='#f03426' width='35px' height='35px' marginLeft='10px' borderRadius='5px' alignItems='center' justifyContent='center'>
+                    <Flex onClick={(e) => {removeLayer(item.layerName); e.preventDefault();}} backgroundColor='#f03426' width='35px' height='35px' marginLeft='10px' borderRadius='5px' alignItems='center' justifyContent='center'>
                         <Icon as={BiTrashAlt} w={4} h={4} color='#ffffff' />
                     </Flex>
                 )}
@@ -68,14 +71,14 @@ export default function LayerBlock(props: {item: {layerName: string, images: any
                 </Text>
             </Flex>
 
-            {item.images.map((img:{url:string, imageName: string, layerRarity: number}, index:number) => {
+            {item.images.map((img:ILayerImage, index:number) => {
                 return (
                     <Flex key={index} backgroundColor='#21212105' marginTop='5px' marginBottom='7px'  width='100%' flexDir='row' alignItems='center'  gap='10px' border='1px solid #f0f0f0' padding='7px' borderRadius='5px' >
                         <Image src={img.url} height='40px' borderRadius='4px'/>
                         <Text>{img.imageName}</Text>
                         <Spacer/>
                         Rarity %:
-                        <Input placeholder='0' value={img.layerRarity} width='52px'/>
+                        <Input placeholder='0' value={img.rarity} width='60px'/>
 
                         <Flex onClick={(e) => {alert(1); e.preventDefault();}} backgroundColor='#ededed' width='40px' height='40px' marginLeft='0px' borderRadius='5px' alignItems='center' justifyContent='center' cursor='pointer'>
                             <Icon as={BiLockOpenAlt} w={5} h={5} color='#4a4a4a' />
