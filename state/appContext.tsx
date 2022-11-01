@@ -5,11 +5,15 @@ import { IProjectMeta } from "./projectState";
 import useSWR from "swr";
 import { fetcher } from "../config";
 import { MarketApp } from "../lib/types";
+import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useSession } from "@supabase/auth-helpers-react";
+
+
 
 export interface AppContextType 
 {
     layerData: ILayer[],
-    addLayer: (layerName: string) => boolean,
+    addLayer: (layerName: string) => void,
     removeLayer: (layerName: string) => void,
     moveLayerUp: (layerIndex: number) => void,
     moveLayerDown: (layerIndex: number) => void,
@@ -17,49 +21,62 @@ export interface AppContextType
     removeLayerImage: (layerIndex: number, imageIndex: number) => void
 
     // Layer name modal
-    setLayerNameModalProps: (props: IChangeLayerNameModalProps) => void,
+    setLayerNameModalProps: (props: IChangeLayerNameModalProps|null) => void,
     layerNameModalProps: IChangeLayerNameModalProps | null,
 
-    projectMeta: IProjectMeta
-    setProjectName: (projName: string) => void,
-    setProjectFee: (projFee: number) => void,
-
-    marketApps: MarketApp[]
+   
 }
-
-
-
-const layerDataDemo: ILayer[] = [
-    {layerName: 'Background', images: [
-        {
-            imageName: 'Bg_1.jpg',
-            url: 'https://img.seadn.io/files/84b7e2e55e4a354a1e8dda5dea15d5ca.png?fit=max&w=2000',
-            rarity: 100
-        },
-    ]},  
-];
-
 
 const AppContext = createContext<AppContextType>({} as AppContextType);
 
 export function AppProvider({ children }: { children: ReactNode; }) {
-    const [layerData, setLayerData]= useState<ILayer[]>(layerDataDemo);
+    const [layerData, setLayerData]= useState<ILayer[]>([]);
+    const supabase = useSupabaseClient()
+    const session = useSession()
+
+    const updateData = async() => {
+        const {data: { user },} = await supabase.auth.getUser()
+        const { data:projectData } = await supabase.from('Project').select('*').eq('owner_uid', user?.id);
+        
+        if (projectData && projectData.length > 0){
+            const proj = projectData[0];
+            setLayerData(proj.layers)
+        }
+    }
+
+    useEffect(() => {
+        updateData()
+    }, [])
+
+    useEffect(() => {
+        updateData()
+    }, [session])
+
+    const updateLayerData = async(newLayers: ILayer[]) => {
+        const {data: { user },} = await supabase.auth.getUser()
+
+        const { error } = await supabase
+        .from('Project')
+        .update({ layers: newLayers })
+        .eq('owner_uid', user?.id)
+
+        return !error
+    }
 
     const [layerNameModalProps, setLayerNameModalProps] = useState<IChangeLayerNameModalProps|null>(null);
-    const [projectMeta, setProjectMeta] = useState<IProjectMeta>({
-        projectName: 'Demo project', 
-        projectFee: 2.5,
-        blockchain: 'Solana',
-        totalMints: 10_000,
-        minted: 10_000,
-        traitCount: 75
-    });
-    
-    const removeLayer = (layerName: string) => {
-        setLayerData((prevState) => prevState.filter((item) => item.layerName !== layerName));
+
+    const removeLayer = async (layerName: string) => {
+        let newArr = [...layerData]
+        newArr = newArr.filter((item) => item.layerName !== layerName)
+
+        if (await updateLayerData(newArr)){
+            setLayerData(newArr);
+        } else {
+            alert('Failed to update layers data')
+        }
     };
 
-    const addLayer = (layerName: string):boolean => {
+    const addLayer = async (layerName: string) => {
         let exists = false;
 
         layerData.forEach((layer) => {
@@ -69,7 +86,8 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         })
 
         if (exists){
-            return false;
+            alert('Layer with this name already exists')
+            return;
         }
 
         const newLayers: ILayer[] = [...layerData, {
@@ -77,33 +95,48 @@ export function AppProvider({ children }: { children: ReactNode; }) {
             images: []
         }];
 
-        setLayerData(newLayers);
-
-        return true;
+        if (await updateLayerData(newLayers)){
+            setLayerData(newLayers);
+        } else {
+            alert('Failed to update layers data')
+        }
     };
 
-    const moveLayerUp = (layerIndex: number) => {
+    const moveLayerUp = async (layerIndex: number) => {
         let newArr = [...layerData];
         const tmp = newArr[layerIndex];
         newArr[layerIndex] = newArr[layerIndex - 1];
         newArr[layerIndex - 1] = tmp;
 
-        setLayerData(newArr);
+        if (await updateLayerData(newArr)){
+            setLayerData(newArr);
+        } else {
+            alert('Failed to update layers data')
+        }
     };
 
-    const moveLayerDown = (layerIndex: number) => {
+    const moveLayerDown = async (layerIndex: number) => {
         let newArr = [...layerData];
         const tmp = newArr[layerIndex];
         newArr[layerIndex] = newArr[layerIndex + 1];
         newArr[layerIndex + 1] = tmp;
 
-        setLayerData(newArr);
+        if (await updateLayerData(newArr)){
+            setLayerData(newArr);
+        } else {
+            alert('Failed to update layers data')
+        }
     };
 
-    const renameLayer = (layerIndex: number, newName: string) => {
+    const renameLayer = async (layerIndex: number, newName: string) => {
         let newArr = [...layerData];
         newArr[layerIndex].layerName = newName;
-        setLayerData(newArr);
+
+        if (await updateLayerData(newArr)){
+            setLayerData(newArr);
+        } else {
+            alert('Failed to update layers data')
+        }
     }
 
     const removeLayerImage = (layerIndex: number, imageIndex: number) => {
@@ -112,29 +145,7 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         setLayerData(newArr);
     }
 
-    const setProjectName = (projName: string) => {
-        let newMeta: IProjectMeta = {...projectMeta};
-        newMeta.projectName = projName;
-
-        setProjectMeta(newMeta);
-    }
-
-    const setProjectFee = (projFee: number) => {
-        let newMeta: IProjectMeta = {...projectMeta};
-        newMeta.projectFee = projFee;
-
-        setProjectMeta(newMeta);
-    }
-
-    let marketApps: MarketApp[] = [];
-
-    {
-        const { data, error } = useSWR<MarketApp[]>('/api/marketApps', fetcher)
-        if (!error && data) {
-            marketApps = data;
-        }
-    }
-
+    
    
     const ctxVal:AppContextType = {
         layerData,
@@ -145,11 +156,7 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         layerNameModalProps,
         setLayerNameModalProps,
         renameLayer, 
-        projectMeta,
-        setProjectName,
-        setProjectFee,
-        removeLayerImage,
-        marketApps
+        removeLayerImage
     } ;
 
     return (

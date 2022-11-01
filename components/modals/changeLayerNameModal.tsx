@@ -43,7 +43,6 @@ export default function ChangeLayerNameModal() {
                     setValue(layerNameModalProps.currentName)
                 }
             }
-
             onOpen()
         }
     }, [layerNameModalProps])
@@ -55,6 +54,11 @@ export default function ChangeLayerNameModal() {
         }
     };
 
+    const onCloseDialog = () => {
+        setLayerNameModalProps(null);
+        onClose()
+    }
+
 
     const title = layerNameModalProps?.createMode ? 'Create layer': 'Rename layer'
     const okActionLabel = layerNameModalProps?.createMode ? 'Create': 'Rename'
@@ -63,7 +67,7 @@ export default function ChangeLayerNameModal() {
         <Modal
             initialFocusRef={initialRef}
             isOpen={isOpen}
-            onClose={onClose}
+            onClose={onCloseDialog}
         >
             <ModalOverlay />
             <ModalContent>
@@ -81,7 +85,7 @@ export default function ChangeLayerNameModal() {
                 <Button colorScheme='blue' mr={3} onClick={onOk}>
                 {okActionLabel}
                 </Button>
-                <Button onClick={onClose}>Cancel</Button>
+                <Button onClick={onCloseDialog}>Cancel</Button>
             </ModalFooter>
             </ModalContent>
         </Modal>

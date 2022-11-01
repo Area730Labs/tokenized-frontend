@@ -27,6 +27,7 @@ import { Input } from '@chakra-ui/react'
 import { useState } from 'react'
 import { ILayer, ILayerImage } from '../state/layerState';
 import { useAppContext } from '../state/appContext';
+import { uuidv4, selectFile } from '../utils'
 
 
 export default function LayerBlock(props: {item: ILayer, index: number}) 
@@ -35,6 +36,30 @@ export default function LayerBlock(props: {item: ILayer, index: number})
     const {removeLayer, layerData, moveLayerUp, moveLayerDown, renameLayer, removeLayerImage} = useAppContext();
     const {layerNameModalProps, setLayerNameModalProps} = useAppContext()
     const [isHover, setHover] = useState(false);
+    const [dragActive, setDragActive] = useState(false);
+
+    const handleDrag = (e:any) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.type === "dragenter" || e.type === "dragover") {
+          setDragActive(true);
+        } else if (e.type === "dragleave") {
+          setDragActive(false);
+        }
+    };
+
+    const uploadLayers = async(files:any[]) => {
+        alert('Uploading files ' + files.length)
+    };
+
+    const handleDrop = (e:any) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragActive(false);
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          uploadLayers(e.dataTransfer.files)
+        }
+      };
 
     const onEdit = () => {
         setLayerNameModalProps({
@@ -43,6 +68,16 @@ export default function LayerBlock(props: {item: ILayer, index: number})
             currentName: item.layerName
         })
     };
+
+    const onUploadClick = async() => {
+        const files = await selectFile("image/*", true);
+
+        //@ts-ignore
+        if (files && files[0]){
+            //@ts-ignore
+            uploadLayers(files)
+        }
+    }
 
     return (
         <AccordionItem>
@@ -90,9 +125,9 @@ export default function LayerBlock(props: {item: ILayer, index: number})
             </h2>
             <AccordionPanel pb={4}>
 
-            <Flex cursor='pointer' border='2px dashed #e3e3e3' width='100%' height='60px' borderRadius='10px' marginBottom='10px' alignItems='center' justifyContent='center'>
+            <Flex backgroundColor={dragActive?'#f9f9f9':'white'} onClick={onUploadClick} onDrop={handleDrop} onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} cursor='pointer' border='2px dashed #e3e3e3' width='100%' height='60px' borderRadius='10px' marginBottom='10px' alignItems='center' justifyContent='center'>
                 <Text fontWeight='bold' color='#757575'>
-                    + Drop images to add
+                    <>+ Drop images to add</>
                 </Text>
             </Flex>
 

@@ -19,6 +19,8 @@ import LayerBlock from '../components/layerBlock'
 import { useState, useRef, useEffect } from 'react'
 import { useAppContext } from '../state/appContext'
 import ChangeLayerNameModal from '../components/modals/changeLayerNameModal'
+import { withPageAuth } from '@supabase/auth-helpers-nextjs'
+import { ILayer } from '../state/layerState';
 
 
 export default function Layers()
@@ -27,7 +29,7 @@ export default function Layers()
 
     let viewData: any = [];
 
-    layerData.map((item, index) => {
+    layerData?.map((item, index) => {
         viewData.push(
             <LayerBlock item={item} key={index} index={index} />
         );
@@ -54,7 +56,7 @@ export default function Layers()
                         Generate NFTs
                     </Button>
                     <Spacer/>
-                    <Button onClick={onCreateNewLayer} size='sm' leftIcon={<Icon as={BiAddToQueue} w={5} h={5} color='#ffffff' />} colorScheme='green' variant='solid'>
+                    <Button onClick={() => onCreateNewLayer()} size='sm' leftIcon={<Icon as={BiAddToQueue} w={5} h={5} color='#ffffff' />} colorScheme='green' variant='solid'>
                         Add layer
                     </Button>
                 </Flex>
@@ -73,3 +75,33 @@ export default function Layers()
         </Flex>
     )
 }
+
+
+
+export const getServerSideProps = withPageAuth({
+    redirectTo: '/',
+    // async getServerSideProps(ctx, supabase) {
+    //     const {
+    //         data: { user },
+    //       } = await supabase.auth.getUser()
+
+    //     console.log(user?.id)
+        
+    //     const { data:projectData } = await supabase.from('Project').select('*').eq('owner_uid', user?.id);
+
+    //     if (projectData){
+    //         const proj = projectData[0];
+
+    //         return { props: { layers: proj.layers as Layer[] } }
+
+    //         // const { data:layerData } = await supabase.from('layers').select('*').eq('project_id', proj.id);
+
+    //         // if (layerData){
+    //         //     return { props: { layers: layerData as Layer[] } }
+    //         // }
+    //     }
+
+
+    //     return { props: {  } }
+    // },
+})
