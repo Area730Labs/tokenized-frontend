@@ -59,7 +59,7 @@ export default function Home() {
 
       <main className={styles.main}>
         <h1 className={styles.title}>
-          Welcome to <a href="/">tokenized.so!</a>
+          Welcome to <Link href="/">tokenized.so!</Link>
         </h1>
 
         <Button onClick={onOpen} colorScheme='teal' size='lg' marginTop={10}>
