@@ -10,12 +10,16 @@ import { useRouter } from 'next/router';
 import { Icon } from '@chakra-ui/react'
 
 
-export default function SidebarButton(props: { key: any, label: string, icon: any, url: string})
+export default function SidebarButton(props: { key: any, label: string, icon: any, url: string, onClick?:()=>void})
 {
     const router = useRouter();
 
     const clickHandler = () => {
-        router.replace(props.url);
+        if (props.onClick){
+            props.onClick();
+        } else {
+            router.replace(props.url);
+        }
     };
 
     const isOpened = router.pathname === props.url;

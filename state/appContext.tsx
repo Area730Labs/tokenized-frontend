@@ -2,6 +2,9 @@ import { ILayer, ILayerImage } from "./layerState"
 import { createContext, ReactNode, useContext, useState, useMemo, useEffect} from "react";
 import { IChangeLayerNameModalProps } from "../components/modals/changeLayerNameModal";
 import { IProjectMeta } from "./projectState";
+import useSWR from "swr";
+import { fetcher } from "../config";
+import { MarketApp } from "@prisma/client";
 
 export interface AppContextType 
 {
@@ -19,7 +22,9 @@ export interface AppContextType
 
     projectMeta: IProjectMeta
     setProjectName: (projName: string) => void,
-    setProjectFee: (projFee: number) => void
+    setProjectFee: (projFee: number) => void,
+
+    marketApps: MarketApp[]
 }
 
 
@@ -39,6 +44,7 @@ const AppContext = createContext<AppContextType>({} as AppContextType);
 
 export function AppProvider({ children }: { children: ReactNode; }) {
     const [layerData, setLayerData]= useState<ILayer[]>(layerDataDemo);
+
     const [layerNameModalProps, setLayerNameModalProps] = useState<IChangeLayerNameModalProps|null>(null);
     const [projectMeta, setProjectMeta] = useState<IProjectMeta>({
         projectName: 'Demo project', 
@@ -120,6 +126,15 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         setProjectMeta(newMeta);
     }
 
+    let marketApps: MarketApp[] = [];
+
+    {
+        const { data, error } = useSWR<MarketApp[]>('/api/marketApps', fetcher)
+        if (!error && data) {
+            marketApps = data;
+        }
+    }
+
    
     const ctxVal:AppContextType = {
         layerData,
@@ -133,7 +148,8 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         projectMeta,
         setProjectName,
         setProjectFee,
-        removeLayerImage
+        removeLayerImage,
+        marketApps
     } ;
 
     return (

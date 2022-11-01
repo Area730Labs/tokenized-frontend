@@ -16,9 +16,19 @@ import
     BiImages
 } from "react-icons/bi";
 import HeaderBlock from './headerBlock';
+import { useSession, useSupabaseClient } from '@supabase/auth-helpers-react'
+import { useRouter } from 'next/router'
+
+
 
 export default function Sidebar()
 {
+    const supabase = useSupabaseClient()
+    let router= useRouter()
+    const session = useSession()
+
+    
+
     const data = [
         {
             label: 'Overview',
@@ -57,6 +67,15 @@ export default function Sidebar()
         }
     ]
 
+    const signOut = async() => {
+        const { error } = await supabase.auth.signOut()
+        if (error) {
+            console.error(`Failed to sign out: error ${error}`)
+        } else {
+            router.push('/')
+        }
+    }
+
     return (
         <Flex width='230px' height='100vh' backgroundColor='#fafafa' flexDir='column' padding='10px' gap='10px'>
             <HeaderBlock/>
@@ -68,7 +87,7 @@ export default function Sidebar()
 
             <Spacer/>
             <Divider/>
-            <SidebarButton label='Sign out' key={9999} icon={BiLogOut}  url='/' />
+            <SidebarButton onClick={signOut} label='Sign out' key={9999} icon={BiLogOut} url='/'  />
         </Flex>
     )
 }

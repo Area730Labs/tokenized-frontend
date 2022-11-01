@@ -12,12 +12,16 @@ import
     BiCheck
 } from "react-icons/bi";
 import { Icon } from '@chakra-ui/react'
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function TitleBlock(props: {title: string, value: string, hasEdit: boolean, onValChanged?:(val:string)=>void}) {
 
     const [val, setVal] = useState(props.value);
     const [isEdit, setIsEdit] = useState(false);
+
+    useEffect(() => {
+        setVal(props.value)
+    }, [props.value])
 
     const onEdit = () => {
         setIsEdit(true);

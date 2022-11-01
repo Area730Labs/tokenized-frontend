@@ -3,16 +3,23 @@ import {
     Flex,
     Image,
     Spacer,
-    Text
+    Text,
+    Spinner
 } from '@chakra-ui/react'
 import Sidebar from '../components/sidebar'
 import ContentHeader from '../components/contentHeader'
 import TitleBlock from '../components/titleBlock'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAppContext } from '../state/appContext'
+import { withPageAuth } from '@supabase/auth-helpers-nextjs'
+import { Project } from '../lib/types'
+import { useSupabaseClient } from '@supabase/auth-helpers-react'
+import { BiPlusMedical } from "react-icons/bi";
+import { Icon } from '@chakra-ui/react'
+
 
 function selectFile (contentType:any, multiple:any){
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
         let input = document.createElement('input');
         input.type = 'file';
         input.multiple = multiple;
@@ -34,17 +41,126 @@ function selectFile (contentType:any, multiple:any){
 const TEST_LOGO = 'https://i.seadn.io/gae/Ju9CkWtV-1Okvf45wo8UctR-M9He2PjILP0oOvxE89AyiPPGtrR3gysu1Zgy0hjd2xKIgjJJtWIc0ybj4Vd7wv8t3pxDGHoJBzDB?auto=format&w=3840';
 
 
-export default function App()
+export default function App(props:{data:Project[]})
 {
-    const {projectMeta, setProjectName, setProjectFee} = useAppContext()
+    const [uploading, setUploading] = useState(false)
+    const [projData, setProjData] = useState<Project>(props.data[0]);
+    const supabase = useSupabaseClient()
+    const [isHover, setHover] = useState(false);
 
-    const [logoUrl, setLogoUrl] = useState(TEST_LOGO);
+    // const [logoUrl, setLogoUrl] = useState(TEST_LOGO);
     const onLogoSelect = async() => {
-        let files = await selectFile("image/*", false);
+        
+        try {
+            let files = await selectFile("image/*", false);
 
-        //@ts-ignore
-        setLogoUrl(URL.createObjectURL(files));
+            //@ts-ignore
+            const file = files
+            //@ts-ignore
+            const fileExt = file.name.split('.').pop()
+            const fileName = `${projData.id}_${projData.owner_uid}.jpg`
+            const filePath = `${fileName}`
+
+            setUploading(true);
+    
+            let { error: uploadError } = await supabase.storage
+            .from('project-icons')
+            //@ts-ignore
+            .upload(filePath, file, { upsert: true })
+    
+            if (uploadError) {
+                alert('upload error: ' + JSON.stringify(uploadError));
+                throw uploadError
+            }
+    
+            const { data } = supabase
+            .storage
+            .from('project-icons')
+            .getPublicUrl(filePath)
+
+            const { error } = await supabase
+            .from('Project')
+            .update({ logoUrl: data.publicUrl })
+            .eq('id', projData.id)
+
+            if (error) {
+                alert('Failed to update project url ' + JSON.stringify(uploadError));
+                throw error
+            }
+    
+            setProjData({
+                ...projData,
+                logoUrl: data.publicUrl
+            })
+        } catch(err) {
+
+        } finally {
+            setUploading(false);
+        }
+
+        // //@ts-ignore
+        // setLogoUrl(URL.createObjectURL(files));
     };
+    
+   
+    const setProjectName = async (newName:string) => {
+        if (!newName || newName === projData.name){
+            return
+        }
+
+        const oldName = projData.name;
+
+        setProjData({
+            ...projData,
+            name: newName
+        })
+
+        const { error } = await supabase
+        .from('Project')
+        .update({ name: newName })
+        .eq('id', projData.id)
+
+        if (error) {
+            alert('Failed to update project name')
+
+            setProjData({
+                ...projData,
+                name: oldName
+            })
+        }
+    }
+
+    const setProjectFee = async (newFee:number) => {
+        if (newFee === projData.fee){
+            return
+        }
+
+        const oldFee = projData.fee;
+
+        setProjData({
+            ...projData,
+            fee: newFee
+        })
+
+        const { error } = await supabase
+        .from('Project')
+        .update({ fee: newFee })
+        .eq('id', projData.id)
+
+        if (error) {
+            alert('Failed to update project fee')
+
+            setProjData({
+                ...projData,
+                fee: oldFee
+            })
+        }
+    }
+
+    let logoUrl = TEST_LOGO;
+    if (projData.logoUrl){
+        logoUrl = projData.logoUrl
+    }
 
     return (
         <Flex dir='row'> 
@@ -53,17 +169,32 @@ export default function App()
 
            <Flex padding='20px' flexDir='column' flexGrow={1} gap={5} alignItems='center' height='100vh'  overflowY='scroll' overflowX='hidden'>
                 <ContentHeader title='Overview'/>
-                    <Image onClick={() => onLogoSelect()} cursor='pointer' borderRadius={100} width={200} height={200} src={logoUrl} />
+                    <Box onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+                    <Image  cursor='pointer' borderRadius={100} width={200} height={200} src={logoUrl} />
+                    
+                    {uploading && ( 
+                        <Flex position='absolute' borderRadius={100} top={70} backgroundColor='rgba(0,0,0,0.5)' width={200} height={200} alignItems='center' justifyContent='center'>
+                            <Spinner color='white'  size='lg'/>
+                        </Flex>
+                    )}
+
+                    {isHover && !uploading && (
+                        <Flex onClick={() => onLogoSelect()} cursor='pointer'  position='absolute' borderRadius={100} top={70} backgroundColor='rgba(0,0,0,0.5)' width={200} height={200} alignItems='center' justifyContent='center'>
+                            <Icon as={BiPlusMedical} w={7} h={7} color='white' />
+                        </Flex>
+                    )}
+
+                    </Box>
 
                 <Flex flexDir='column' gap={4} >
 
-                    <TitleBlock title='Project name' value={projectMeta.projectName} hasEdit={true} onValChanged={setProjectName} />
-                    <TitleBlock title='Creator fee' value={`${projectMeta.projectFee}%`} hasEdit={true} onValChanged={(val) => setProjectFee(+val)} />
+                    <TitleBlock title='Project name' value={projData.name} hasEdit={true} onValChanged={setProjectName} />
+                    <TitleBlock title='Creator fee %' value={projData.fee.toString()} hasEdit={true} onValChanged={(val) => setProjectFee(+val)} />
 
-                    <TitleBlock title='Blockchain' value={projectMeta.blockchain} hasEdit={false} />
-                    <TitleBlock title='Total mints' value={`${projectMeta.totalMints}`} hasEdit={false} />
-                    <TitleBlock title='Minted' value={`${projectMeta.minted}`} hasEdit={false} />
-                    <TitleBlock title='Trait count' value={`${projectMeta.traitCount}`} hasEdit={false} />
+                    <TitleBlock title='Blockchain' value={projData.blockchain} hasEdit={false} />
+                    <TitleBlock title='Total mints' value={`${projData.mintCount}`} hasEdit={false} />
+                    <TitleBlock title='Minted' value={`${projData.minted}`} hasEdit={false} />
+                    <TitleBlock title='Trait count' value={`${projData.traitCount}`} hasEdit={false} />
 
                     <Spacer/>
 
@@ -73,3 +204,18 @@ export default function App()
         </Flex>
     )
 }
+
+export const getServerSideProps = withPageAuth({
+    redirectTo: '/',
+    async getServerSideProps(ctx, supabase) {
+        const {
+            data: { user },
+          } = await supabase.auth.getUser()
+
+        console.log(user?.id)
+        
+        const { data } = await supabase.from('Project').select('*').eq('owner_uid', user?.id);
+
+        return { props: { data } }
+    },
+})
