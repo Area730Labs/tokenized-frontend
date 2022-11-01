@@ -4,7 +4,7 @@ import { IChangeLayerNameModalProps } from "../components/modals/changeLayerName
 import { IProjectMeta } from "./projectState";
 import useSWR from "swr";
 import { fetcher } from "../config";
-import { MarketApp } from "@prisma/client";
+import { MarketApp } from "../lib/types";
 
 export interface AppContextType 
 {
