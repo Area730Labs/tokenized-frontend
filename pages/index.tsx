@@ -1,5 +1,6 @@
 import Head from 'next/head'
 import Image from 'next/image'
+import Link from 'next/link'
 import styles from '../styles/Home.module.css'
 import { 
   Flex, Spacer,
@@ -21,6 +22,7 @@ export default function Home() {
   const session = useSession()
   const supabase = useSupabaseClient()
   let router = useRouter()
+  const { isOpen, onOpen, onClose } = useDisclosure()
 
   if (session){
     router.push('/app');
@@ -28,7 +30,6 @@ export default function Home() {
   }
 
 
-  const { isOpen, onOpen, onClose } = useDisclosure()
 
   return (
     <div className={styles.container}>
