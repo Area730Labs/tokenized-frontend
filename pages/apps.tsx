@@ -11,10 +11,11 @@ import { Input, InputGroup, InputLeftElement } from '@chakra-ui/react'
 import ContentHeader from '../components/contentHeader';
 import { AiFillStar } from "react-icons/ai";
 import { Icon } from '@chakra-ui/react'
-import { MarketApp } from '@prisma/client';
 import { useAppContext } from '../state/appContext';
 import { useState } from 'react';
 import { User, withPageAuth } from '@supabase/auth-helpers-nextjs'
+import { MarketApp } from '../lib/types';
+
 
 function truncate(input: string) {
     const l = 125;

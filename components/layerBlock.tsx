@@ -103,7 +103,7 @@ export default function LayerBlock(props: {item: ILayer, index: number})
                         <Text>{img.imageName}</Text>
                         <Spacer/>
                         Rarity %:
-                        <Input placeholder='0' value={img.rarity} width='60px'/>
+                        <Input placeholder='0' value={img.rarity} onChange={(e) => {}} width='60px'/>
 
                         <Flex onClick={(e) => {alert(1); e.preventDefault();}} backgroundColor='#ededed' width='40px' height='40px' marginLeft='0px' borderRadius='5px' alignItems='center' justifyContent='center' cursor='pointer'>
                             <Icon as={BiLockOpenAlt} w={5} h={5} color='#4a4a4a' />
