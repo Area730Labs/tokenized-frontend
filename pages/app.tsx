@@ -18,6 +18,13 @@ import { BiPlusMedical } from "react-icons/bi";
 import { Icon } from '@chakra-ui/react'
 
 
+function uuidv4() {
+    //@ts-ignore
+    return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+      (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+    );
+  }
+
 function selectFile (contentType:any, multiple:any){
     return new Promise((resolve, reject) => {
         let input = document.createElement('input');
@@ -38,7 +45,7 @@ function selectFile (contentType:any, multiple:any){
     });
 }
 
-const TEST_LOGO = 'https://i.seadn.io/gae/Ju9CkWtV-1Okvf45wo8UctR-M9He2PjILP0oOvxE89AyiPPGtrR3gysu1Zgy0hjd2xKIgjJJtWIc0ybj4Vd7wv8t3pxDGHoJBzDB?auto=format&w=3840';
+const TEST_LOGO = 'https://wjravptupakqkmcwjgcz.supabase.co/storage/v1/object/public/images/placeholder.png';
 
 
 export default function App(props:{data:Project[]})
@@ -47,7 +54,32 @@ export default function App(props:{data:Project[]})
     const [projData, setProjData] = useState<Project>(props.data[0]);
     const supabase = useSupabaseClient()
     const [isHover, setHover] = useState(false);
+    const [avatarUrl, setAvatarUrl] = useState(null)
 
+    useEffect(() => {
+        if (projData.logoUrl) downloadImage(projData.logoUrl)
+      }, [projData.logoUrl])
+
+
+    async function downloadImage(path:string) {
+        try {
+            const { data, error } = await supabase.storage
+            .from('project-icons')
+            .download(path)
+
+            if (error) {
+                throw error
+            }
+
+            const url = URL.createObjectURL(data)
+
+            //@ts-ignore
+            setAvatarUrl(url)
+        } catch (error) {
+            console.log('Error downloading image: ', error)
+        }
+    }
+    
     // const [logoUrl, setLogoUrl] = useState(TEST_LOGO);
     const onLogoSelect = async() => {
         
@@ -58,7 +90,8 @@ export default function App(props:{data:Project[]})
             const file = files
             //@ts-ignore
             const fileExt = file.name.split('.').pop()
-            const fileName = `${projData.id}_${projData.owner_uid}.jpg`
+            // const fileName = `${projData.id}_${projData.owner_uid}.jpg`
+            const fileName = `${uuidv4()}.jpg`
             const filePath = `${fileName}`
 
             setUploading(true);
@@ -73,14 +106,14 @@ export default function App(props:{data:Project[]})
                 throw uploadError
             }
     
-            const { data } = supabase
-            .storage
-            .from('project-icons')
-            .getPublicUrl(filePath)
+            // const { data } = supabase
+            // .storage
+            // .from('project-icons')
+            // .getPublicUrl(filePath)
 
             const { error } = await supabase
             .from('Project')
-            .update({ logoUrl: data.publicUrl })
+            .update({ logoUrl: filePath })
             .eq('id', projData.id)
 
             if (error) {
@@ -90,7 +123,7 @@ export default function App(props:{data:Project[]})
     
             setProjData({
                 ...projData,
-                logoUrl: data.publicUrl
+                logoUrl: filePath
             })
         } catch(err) {
 
@@ -158,8 +191,8 @@ export default function App(props:{data:Project[]})
     }
 
     let logoUrl = TEST_LOGO;
-    if (projData.logoUrl){
-        logoUrl = projData.logoUrl
+    if (avatarUrl){
+        logoUrl = avatarUrl
     }
 
     return (

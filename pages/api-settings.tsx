@@ -12,9 +12,10 @@ import
 { 
     BiCopy,
 } from "react-icons/bi";
+import { User, withPageAuth } from '@supabase/auth-helpers-nextjs'
+import { Profile } from '../lib/types';
 
-
-export default function ApiSettings() {
+export default function ApiSettings(props:{profile:Profile}) {
 
     const toast = useToast();
     const id = 'copy-toast';
@@ -53,10 +54,12 @@ export default function ApiSettings() {
                     <Box backgroundColor='#f7f7f7' padding={3} borderRadius='10px' width='auto'>
                         <Text fontWeight='bold'>Your API key:</Text>
                         <Flex flexDir='row' alignItems='center' gap={5}>
-                            <Text>2893u4jksdjfksdf7s6d87fyshdkfhsjkdf</Text>
+                            <Text>{props.profile.api_key}</Text>
                             <Button
                             onClick={() =>
                                 {
+                                    //@ts-ignore
+                                    navigator.clipboard.writeText(props.profile.api_key);
                                     if (!toast.isActive(id)){
                                         toast({
                                             id,
@@ -81,3 +84,18 @@ export default function ApiSettings() {
         </Flex>
     );
 }
+
+export const getServerSideProps = withPageAuth({
+    redirectTo: '/',
+    async getServerSideProps(ctx, supabase) {
+        const {
+            data: { user },
+          } = await supabase.auth.getUser()
+
+        
+        const { data } = await supabase.from('Profile').select('*').eq('owner_uid', user?.id);
+        
+        //@ts-ignore
+        return { props: { profile: data[0] } }
+    },
+})

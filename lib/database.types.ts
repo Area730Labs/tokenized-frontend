@@ -70,16 +70,36 @@ export interface Database {
           published?: boolean
         }
       }
+      Profile: {
+        Row: {
+          id: number
+          owner_uid: string | null
+          api_key: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: number
+          owner_uid?: string | null
+          api_key?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: number
+          owner_uid?: string | null
+          api_key?: string | null
+          created_at?: string | null
+        }
+      }
       Project: {
         Row: {
           name: string
           logoUrl: string | null
           fee: number
           blockchain: string
+          id: number
           mintCount: number | null
           minted: number | null
           traitCount: number | null
-          id: number
           owner_uid: string
         }
         Insert: {
@@ -87,10 +107,10 @@ export interface Database {
           logoUrl?: string | null
           fee: number
           blockchain: string
+          id?: number
           mintCount?: number | null
           minted?: number | null
           traitCount?: number | null
-          id?: number
           owner_uid: string
         }
         Update: {
@@ -98,10 +118,10 @@ export interface Database {
           logoUrl?: string | null
           fee?: number
           blockchain?: string
+          id?: number
           mintCount?: number | null
           minted?: number | null
           traitCount?: number | null
-          id?: number
           owner_uid?: string
         }
       }
