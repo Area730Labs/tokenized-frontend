@@ -8,6 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "prismaMigrate": "dotenv -e .env.local prisma migrate dev ",
+    "prismaPull": "dotenv -e .env.local prisma db pull ",
+    "prismaPush": "dotenv -e .env.local prisma db push ",
+
     "prismaStudio": "dotenv -e .env.local prisma studio "
   },
   "dependencies": {

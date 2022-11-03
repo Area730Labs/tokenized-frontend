@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model MarketApp {
+  id          Int     @id @default(autoincrement())
+  name        String  @db.VarChar(255)
+  iconUrl     String  @db.VarChar(255)
+  description String
+  rating      Float
+  ratingCount Int
+  published   Boolean @default(true)
+}
+
+model Profile {
+  id         BigInt    @id @default(autoincrement())
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  owner_uid  String?   @db.Uuid
+  api_key    String?   @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+}
+
+model Project {
+  id         Int     @id @default(autoincrement())
+  name       String  @db.VarChar(255)
+  logoUrl    String?
+  fee        Float
+  blockchain String
+  mintCount  Int?    @default(0)
+  minted     Int?    @default(0)
+  traitCount Int?    @default(0)
+  owner_uid  String  @db.Uuid
+  layers     Json    @default("[]")
+  published  Boolean @default(false)
+}
+
+model LayerImage {
+  uuid        String @id
+  layer_uid   String
+  file_name   String
+  rarity      Int
+  url         String
+  project_id  Int
+}

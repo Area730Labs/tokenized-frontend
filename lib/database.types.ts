@@ -139,6 +139,7 @@ export interface Database {
           traitCount: number | null
           owner_uid: string
           layers: Json
+          published: boolean
         }
         Insert: {
           id?: number
@@ -151,6 +152,7 @@ export interface Database {
           traitCount?: number | null
           owner_uid: string
           layers?: Json
+          published?: boolean
         }
         Update: {
           id?: number
@@ -163,6 +165,7 @@ export interface Database {
           traitCount?: number | null
           owner_uid?: string
           layers?: Json
+          published?: boolean
         }
       }
     }

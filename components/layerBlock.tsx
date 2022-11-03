@@ -28,9 +28,17 @@ import { useState } from 'react'
 import { ILayer, ILayerImage } from '../state/layerState';
 import { useAppContext } from '../state/appContext';
 import { uuidv4, selectFile } from '../utils'
+import LayerImage from './layerImage';
+import { UploadingImage } from '../pages/layers';
 
+type Props = {
+    item: ILayer, 
+    index: number, 
+    uploadingImages: UploadingImage[],
+    onFilesAdded: (files:any[], layerUid:string) => void
+}
 
-export default function LayerBlock(props: {item: ILayer, index: number}) 
+export default function LayerBlock(props: Props) 
 {
     const item = props.item;
     const {removeLayer, layerData, moveLayerUp, moveLayerDown, renameLayer, removeLayerImage} = useAppContext();
@@ -49,7 +57,7 @@ export default function LayerBlock(props: {item: ILayer, index: number})
     };
 
     const uploadLayers = async(files:any[]) => {
-        alert('Uploading files ' + files.length)
+        props.onFilesAdded(files, props.item.uid)
     };
 
     const handleDrop = (e:any) => {
@@ -78,6 +86,13 @@ export default function LayerBlock(props: {item: ILayer, index: number})
             uploadLayers(files)
         }
     }
+
+    const onRemoveLayerImage = async (layerId:string, imageId:string) => {
+        await removeLayerImage(layerId, imageId)
+    }
+
+
+   
 
     return (
         <AccordionItem>
@@ -133,21 +148,13 @@ export default function LayerBlock(props: {item: ILayer, index: number})
 
             {item.images.map((img:ILayerImage, index:number) => {
                 return (
-                    <Flex key={index} backgroundColor='#21212105' marginTop='5px' marginBottom='7px'  width='100%' flexDir='row' alignItems='center'  gap='10px' border='1px solid #f0f0f0' padding='7px' borderRadius='5px' >
-                        <Image src={img.url} height='40px' borderRadius='4px'/>
-                        <Text>{img.imageName}</Text>
-                        <Spacer/>
-                        Rarity %:
-                        <Input placeholder='0' value={img.rarity} onChange={(e) => {}} width='60px'/>
+                    <LayerImage layerUid={props.item.uid} key={index} item={img} layerIndex={props.index} imageIndex={index} onRemoveLayerImage={onRemoveLayerImage} isUploading={false} uploadError={false} />
+                );
+            })}
 
-                        <Flex onClick={(e) => {alert(1); e.preventDefault();}} backgroundColor='#ededed' width='40px' height='40px' marginLeft='0px' borderRadius='5px' alignItems='center' justifyContent='center' cursor='pointer'>
-                            <Icon as={BiLockOpenAlt} w={5} h={5} color='#4a4a4a' />
-                        </Flex>
-
-                        <Flex cursor='pointer' onClick={(e) => {removeLayerImage(props.index, index); e.preventDefault();}} backgroundColor='#f03426' width='35px' height='35px' marginLeft='10px' borderRadius='5px' alignItems='center' justifyContent='center'>
-                            <Icon as={BiTrashAlt} w={4} h={4} color='#ffffff' />
-                        </Flex>
-                    </Flex>
+            {props.uploadingImages.map((img:UploadingImage, index:number) => {
+                return (
+                    <LayerImage layerUid={props.item.uid} key={index} item={img.image} layerIndex={props.index} imageIndex={index} isUploading={img.isUploading} uploadError={img.uploadError} uploadProgress={img.progress} />
                 );
             })}
             </AccordionPanel>

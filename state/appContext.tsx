@@ -7,7 +7,10 @@ import { fetcher } from "../config";
 import { MarketApp } from "../lib/types";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useSession } from "@supabase/auth-helpers-react";
-
+import { uuidv4 } from "../utils";
+import { UploadingImage } from "../pages/layers";
+import { AddLayerImageArgs } from "../pages/api/addLayerImage";
+import { RemoveLayerImageArgs } from "../pages/api/removeLayerImage";
 
 
 export interface AppContextType 
@@ -18,19 +21,23 @@ export interface AppContextType
     moveLayerUp: (layerIndex: number) => void,
     moveLayerDown: (layerIndex: number) => void,
     renameLayer: (layerIndex: number, newName: string) => void,
-    removeLayerImage: (layerIndex: number, imageIndex: number) => void
+    removeLayerImage: (layerUid:string, imageUid: string) => Promise<boolean>
 
     // Layer name modal
     setLayerNameModalProps: (props: IChangeLayerNameModalProps|null) => void,
     layerNameModalProps: IChangeLayerNameModalProps | null,
 
-   
+    isPublished: boolean,
+    addLayerImage: (uploadImage:UploadingImage, layerUid:string) => Promise<boolean>,
 }
 
 const AppContext = createContext<AppContextType>({} as AppContextType);
 
 export function AppProvider({ children }: { children: ReactNode; }) {
     const [layerData, setLayerData]= useState<ILayer[]>([]);
+    const [published, setPublished] = useState(false)
+    const [projectId, setProjectId] = useState(-1)
+
     const supabase = useSupabaseClient()
     const session = useSession()
 
@@ -40,9 +47,37 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         
         if (projectData && projectData.length > 0){
             const proj = projectData[0];
-            setLayerData(proj.layers)
+            setLayerData(await getLayerData())
+            setProjectId(proj.id)
         }
     }
+
+
+    useEffect(() => {
+        if (projectId < 0) {
+            return;
+        }
+
+        const subChannel = supabase
+        .channel('public:Project')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'Project', filter:`id=${projectId}` }, payload => {
+          console.log('Change received!', payload)
+        })
+        .subscribe()
+
+        const { data: authListener } = supabase.auth.onAuthStateChange(
+            (event, session) => {
+              if (event === "SIGNED_OUT") {
+                setProjectId(-1)
+              }
+            }
+          );
+      
+          return () => {
+            authListener.subscription.unsubscribe()
+            supabase.removeAllChannels();
+          };
+    }, [projectId])
 
     useEffect(() => {
         updateData()
@@ -55,6 +90,10 @@ export function AppProvider({ children }: { children: ReactNode; }) {
     const updateLayerData = async(newLayers: ILayer[]) => {
         const {data: { user },} = await supabase.auth.getUser()
 
+        for(let i = 0; i < newLayers.length; ++i){
+            newLayers[i].images = []
+        }
+        
         const { error } = await supabase
         .from('Project')
         .update({ layers: newLayers })
@@ -76,6 +115,8 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         }
     };
 
+    //TODO(vlad): handle state sync differently, currently has a big space for bugs. 
+    // Probably should first update local state, then upload it, and roll back if error
     const addLayer = async (layerName: string) => {
         let exists = false;
 
@@ -92,7 +133,8 @@ export function AppProvider({ children }: { children: ReactNode; }) {
 
         const newLayers: ILayer[] = [...layerData, {
             layerName:layerName,
-            images: []
+            images: [],
+            uid: uuidv4()
         }];
 
         if (await updateLayerData(newLayers)){
@@ -139,11 +181,80 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         }
     }
 
-    const removeLayerImage = (layerIndex: number, imageIndex: number) => {
-        let newArr = [...layerData];
-        newArr[layerIndex].images.splice(imageIndex, 1);
-        setLayerData(newArr);
+    const getLayerData = async():Promise<ILayer[]> => {
+        const res = await fetch('/api/getLayerData', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            }
+        })
+
+        return await res.json()
     }
+
+    const addLayerImage = async(uploadImage:UploadingImage, layerUid:string):Promise<boolean> => {
+
+        //replace url from local to remote
+        const { data:{publicUrl} } = supabase
+        .storage
+        .from('layer-images')
+        .getPublicUrl(uploadImage.image.fileUid)
+
+        uploadImage.image.url = publicUrl
+
+        const reqData:AddLayerImageArgs = {
+            layerId: layerUid,
+            image: uploadImage.image
+        }
+
+        const res = await fetch('/api/addLayerImage', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(reqData),
+        })
+
+        if (res.status !== 200){
+            return false;
+        }
+
+        setLayerData(await getLayerData())
+
+        return true;
+    }
+
+    const removeLayerImage = async(layerUid:string, imageUid: string):Promise<boolean> => {
+        const reqData:RemoveLayerImageArgs = {
+            layerId: layerUid,
+            imageId: imageUid
+        }
+
+        const res = await fetch('/api/removeLayerImage', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(reqData),
+        })
+
+        if (res.status !== 200){
+            return false;
+        }
+
+        setLayerData((prevData) => {
+            let newData = [...prevData]
+
+            const layerIndex = newData.findIndex(x => x.uid === layerUid)
+            const imageIndex = newData[layerIndex].images.findIndex(x => x.fileUid === imageUid)
+            newData[layerIndex].images.splice(imageIndex, 1)
+
+            return newData
+        })
+
+        return true
+    }
+
 
     
    
@@ -156,6 +267,8 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         layerNameModalProps,
         setLayerNameModalProps,
         renameLayer, 
+        isPublished: published,
+        addLayerImage,
         removeLayerImage
     } ;
 

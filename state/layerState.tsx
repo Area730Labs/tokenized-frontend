@@ -1,11 +1,13 @@
 
 export interface ILayerImage {
     imageName: string,
+    fileUid:string,
     url: string,
-    rarity: number
+    rarity: number,
 }
 
 export interface ILayer {
-    layerName: string;
-    images: ILayerImage[];
+    uid: string,
+    layerName: string,
+    images: ILayerImage[],
 }
