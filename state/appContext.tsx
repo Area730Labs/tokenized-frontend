@@ -12,6 +12,8 @@ import { UploadingImage } from "../pages/layers";
 import { AddLayerImageArgs } from "../pages/api/addLayerImage";
 import { RemoveLayerImageArgs } from "../pages/api/removeLayerImage";
 import { RemoveLayerArgs } from "../pages/api/removeLayer";
+import { SetImageRarityArgs } from "../pages/api/setImageRarity";
+
 
 export interface AppContextType 
 {
@@ -29,6 +31,7 @@ export interface AppContextType
 
     isPublished: boolean,
     addLayerImage: (uploadImage:UploadingImage, layerUid:string, onOk:()=>void) => Promise<boolean>,
+    updateLayerImage: (imageUid:string, rarity:number) => Promise<boolean>
 }
 
 const AppContext = createContext<AppContextType>({} as AppContextType);
@@ -261,6 +264,28 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         return true
     }
 
+    const updateLayerImage = async(imageUid:string, rarity:number): Promise<boolean> => {
+        const reqData:SetImageRarityArgs = {
+            imageUid,
+            rarity
+        }
+
+        const res = await fetch('/api/setImageRarity', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(reqData),
+        })
+
+        if (res.status !== 200){
+            return false;
+        }
+
+        setLayerData(await getLayerData())
+        
+        return true
+    }
 
     
    
@@ -275,7 +300,8 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         renameLayer, 
         isPublished: published,
         addLayerImage,
-        removeLayerImage
+        removeLayerImage,
+        updateLayerImage
     } ;
 
     return (

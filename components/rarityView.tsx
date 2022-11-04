@@ -13,9 +13,15 @@ import
     BiCheck,
     BiX,
 } from "react-icons/bi";
+import { useAppContext } from "../state/appContext";
+
+
+
 
 export type Props = {
     rarity:number,
+    imageUid:string,
+    layerUid:string
 }
 
 export default function RarityView(props:Props){
@@ -24,6 +30,7 @@ export default function RarityView(props:Props){
     const [hasError, setHasError] = useState<boolean>(false)
     const toast = useToast()
     const [isUpading, setIsUpating] = useState<boolean>(false)
+    const {updateLayerImage, layerData} = useAppContext()
 
 
     const handleChange = (event:any) => {
@@ -34,6 +41,24 @@ export default function RarityView(props:Props){
             setHasError(true)
         } else {
             setHasError(false)
+        }
+
+        const layerIndex = layerData.findIndex(x => x.uid === props.layerUid);
+        const layer = layerData[layerIndex]
+
+        let layerRarityTotal = 0;
+        for(let i=0; i < layer.images.length; ++i){
+            const img = layer.images[i]
+
+            if (img.fileUid === props.imageUid) {
+                layerRarityTotal += val
+            } else {
+                layerRarityTotal += img.rarity  
+            }
+        }
+
+        if (layerRarityTotal > 100) {
+            setHasError(true)
         }
 
         setValue(rawVal)
@@ -62,8 +87,19 @@ export default function RarityView(props:Props){
             return
         }
 
-        // setIsUpating(true)
+        setIsUpating(true)
 
+        if (!await updateLayerImage(props.imageUid, parseFloat(value))){
+            toast({
+                title: 'Failed to update rarity',
+                status: 'error',
+                position: 'bottom',
+                duration: 2200,
+                isClosable: true,
+              })
+        }
+
+        setIsUpating(false)
         setIsEdit(false)
     }
 
@@ -78,7 +114,7 @@ export default function RarityView(props:Props){
 
                 {!isEdit && (
                     <>
-                         <Text>{props.rarity}</Text>
+                         <Text width='20px'>{props.rarity}</Text>
                          <Flex onClick={onEdit} alignItems='center' justifyContent='center' backgroundColor='#ffffff' padding='5px' borderRadius='5px' cursor='pointer' _hover={{backgroundColor: '#cccccc'}}>
                             <Icon as={BiPencil} w={4} h={4} color='black' />
                         </Flex>

@@ -42,11 +42,11 @@ export default function LayerImage(props: ImageProps) {
 
     return (
         <Flex onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}  backgroundColor='#21212105' marginTop='5px' marginBottom='7px'  width='100%' flexDir='row' alignItems='center'  gap='10px' border='1px solid #f0f0f0' padding='7px' borderRadius='5px' >
-             {isHover && (
-                        <Flex cursor='pointer' onClick={(e) => {onRemove(); e.preventDefault();}} backgroundColor='#f03426' width='35px' height='35px' marginLeft='10px' borderRadius='5px' alignItems='center' justifyContent='center'>
-                            <Icon as={BiTrashAlt} w={4} h={4} color='#ffffff' />
-                        </Flex>
-                    )}
+             {isHover && !isRemoving && (
+                <Flex cursor='pointer' onClick={(e) => {onRemove(); e.preventDefault();}} backgroundColor='#f03426' width='35px' height='35px' marginLeft='10px' borderRadius='5px' alignItems='center' justifyContent='center'>
+                    <Icon as={BiTrashAlt} w={4} h={4} color='#ffffff' />
+                </Flex>
+            )}
             <Image src={img.url} height='40px' borderRadius='4px'/>
             <Text>{img.imageName}</Text>
             <Spacer/>
@@ -58,7 +58,7 @@ export default function LayerImage(props: ImageProps) {
                     <Icon as={BiPencil} w={4} h={4} color='#4a4a4a' />
                 </Flex> */}
 
-                <RarityView rarity={img.rarity} />
+                <RarityView rarity={img.rarity} imageUid={img.fileUid} layerUid={props.layerUid} />
                     
                     {/* <Input placeholder='0' type="number" value={img.rarity} onChange={(e) => {}} width='60px'/> */}
 

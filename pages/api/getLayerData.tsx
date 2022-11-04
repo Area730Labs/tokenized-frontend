@@ -27,9 +27,14 @@ export default withApiAuth(async function ProtectedRoute(req, res, supabase) {
         return
     }
 
-    const imageData = await prisma.layerImage.findMany({where:{
-        project_id: projectData.id
-    }})
+    const imageData = await prisma.layerImage.findMany({
+        where:{
+            project_id: projectData.id
+        },
+        orderBy: {
+            file_name:'asc'
+        }
+    })
 
     let layerDataA: any [] = projectData.layers as Prisma.JsonArray;
     let layerData = layerDataA as ILayer[];
@@ -50,7 +55,7 @@ export default withApiAuth(async function ProtectedRoute(req, res, supabase) {
         })
     })
 
-    console.log(`function GetLayerData took ${(performance.now() - start).toFixed(3)}ms`);
+    // console.log(`function GetLayerData took ${(performance.now() - start).toFixed(3)}ms`);
     
     res.status(200).json(layerData)
 })
