@@ -11,13 +11,13 @@ import { uuidv4 } from "../utils";
 import { UploadingImage } from "../pages/layers";
 import { AddLayerImageArgs } from "../pages/api/addLayerImage";
 import { RemoveLayerImageArgs } from "../pages/api/removeLayerImage";
-
+import { RemoveLayerArgs } from "../pages/api/removeLayer";
 
 export interface AppContextType 
 {
     layerData: ILayer[],
-    addLayer: (layerName: string) => void,
-    removeLayer: (layerName: string) => void,
+    addLayer: (layerName: string) => Promise<boolean>,
+    removeLayer: (layerId: string) => Promise<boolean>,
     moveLayerUp: (layerIndex: number) => void,
     moveLayerDown: (layerIndex: number) => void,
     renameLayer: (layerIndex: number, newName: string) => void,
@@ -28,7 +28,7 @@ export interface AppContextType
     layerNameModalProps: IChangeLayerNameModalProps | null,
 
     isPublished: boolean,
-    addLayerImage: (uploadImage:UploadingImage, layerUid:string) => Promise<boolean>,
+    addLayerImage: (uploadImage:UploadingImage, layerUid:string, onOk:()=>void) => Promise<boolean>,
 }
 
 const AppContext = createContext<AppContextType>({} as AppContextType);
@@ -93,7 +93,7 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         for(let i = 0; i < newLayers.length; ++i){
             newLayers[i].images = []
         }
-        
+
         const { error } = await supabase
         .from('Project')
         .update({ layers: newLayers })
@@ -104,20 +104,29 @@ export function AppProvider({ children }: { children: ReactNode; }) {
 
     const [layerNameModalProps, setLayerNameModalProps] = useState<IChangeLayerNameModalProps|null>(null);
 
-    const removeLayer = async (layerName: string) => {
-        let newArr = [...layerData]
-        newArr = newArr.filter((item) => item.layerName !== layerName)
-
-        if (await updateLayerData(newArr)){
-            setLayerData(newArr);
-        } else {
-            alert('Failed to update layers data')
+    const removeLayer = async (layerId: string):Promise<boolean> => {
+        const reqData: RemoveLayerArgs = {
+            layerId
         }
+
+        const res = await fetch('/api/removeLayer', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(reqData),
+        })
+
+        if (res.status !== 200){
+            return false;
+        }
+
+        setLayerData(await getLayerData())
+
+        return true
     };
 
-    //TODO(vlad): handle state sync differently, currently has a big space for bugs. 
-    // Probably should first update local state, then upload it, and roll back if error
-    const addLayer = async (layerName: string) => {
+    const addLayer = async (layerName: string):Promise<boolean> => {
         let exists = false;
 
         layerData.forEach((layer) => {
@@ -128,7 +137,7 @@ export function AppProvider({ children }: { children: ReactNode; }) {
 
         if (exists){
             alert('Layer with this name already exists')
-            return;
+            return false;
         }
 
         const newLayers: ILayer[] = [...layerData, {
@@ -138,9 +147,11 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         }];
 
         if (await updateLayerData(newLayers)){
-            setLayerData(newLayers);
+            setLayerData(await getLayerData())
+            return true;
         } else {
             alert('Failed to update layers data')
+            return false
         }
     };
 
@@ -151,7 +162,7 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         newArr[layerIndex - 1] = tmp;
 
         if (await updateLayerData(newArr)){
-            setLayerData(newArr);
+            setLayerData(await getLayerData())
         } else {
             alert('Failed to update layers data')
         }
@@ -164,7 +175,7 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         newArr[layerIndex + 1] = tmp;
 
         if (await updateLayerData(newArr)){
-            setLayerData(newArr);
+            setLayerData(await getLayerData())
         } else {
             alert('Failed to update layers data')
         }
@@ -175,7 +186,7 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         newArr[layerIndex].layerName = newName;
 
         if (await updateLayerData(newArr)){
-            setLayerData(newArr);
+            setLayerData(await getLayerData())
         } else {
             alert('Failed to update layers data')
         }
@@ -192,7 +203,7 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         return await res.json()
     }
 
-    const addLayerImage = async(uploadImage:UploadingImage, layerUid:string):Promise<boolean> => {
+    const addLayerImage = async(uploadImage:UploadingImage, layerUid:string, onOk:()=>void):Promise<boolean> => {
 
         //replace url from local to remote
         const { data:{publicUrl} } = supabase
@@ -219,6 +230,8 @@ export function AppProvider({ children }: { children: ReactNode; }) {
             return false;
         }
 
+        onOk()
+
         setLayerData(await getLayerData())
 
         return true;
@@ -242,15 +255,8 @@ export function AppProvider({ children }: { children: ReactNode; }) {
             return false;
         }
 
-        setLayerData((prevData) => {
-            let newData = [...prevData]
-
-            const layerIndex = newData.findIndex(x => x.uid === layerUid)
-            const imageIndex = newData[layerIndex].images.findIndex(x => x.fileUid === imageUid)
-            newData[layerIndex].images.splice(imageIndex, 1)
-
-            return newData
-        })
+        setLayerData(await getLayerData())
+        
 
         return true
     }

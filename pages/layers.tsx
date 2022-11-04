@@ -5,7 +5,9 @@ import {
     Spacer,
     Accordion,
     Button,
-    useDisclosure
+    useDisclosure,
+    Spinner,
+    Text
 } from '@chakra-ui/react'
 import Sidebar from '../components/sidebar'
 import ContentHeader from '../components/contentHeader'
@@ -23,9 +25,10 @@ import { withPageAuth } from '@supabase/auth-helpers-nextjs'
 import { ILayer, ILayerImage } from '../state/layerState'
 import { uuidv4 } from '../utils';
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
-
-
-
+import 'react-toastify/dist/ReactToastify.css';
+import { Slide, Zoom, Flip, Bounce } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
+import { useToast } from '@chakra-ui/react'
 
 
 export type UploadingImage = {
@@ -44,6 +47,8 @@ export default function Layers()
 
     const {layerData, addLayer, setLayerNameModalProps, isPublished, addLayerImage} = useAppContext();
     const [uploadState, setUploadState] = useState<Record<string, UploadingImage[]>>({});
+    const toastId = useRef(null);
+    const chakraToast = useToast()
 
     let viewData: any = [];
 
@@ -76,8 +81,6 @@ export default function Layers()
     const upload = async (file:any, onCompleted:()=>void, onUploadError:()=>void, layerUid:string, img: UploadingImage) => {
         const fileExt = file.name.split('.').pop()
 
-        console.log(`Starting upload uid ${img.image.fileUid}`)
-
         let { error: uploadError } = await supabase.storage
         .from('layer-images')
         //@ts-ignore
@@ -89,9 +92,7 @@ export default function Layers()
             return
         }
 
-        // if file uploaded to server and state updated ok
-        if (await addLayerImage(img, layerUid)) {
-            // remove from uploading list as it was added to main state in addLayerImage(...)
+        const onOk = () => {
             setUploadState((prevState) => {
                 let newState = {...prevState}
 
@@ -100,6 +101,12 @@ export default function Layers()
 
                 return newState
             })
+        }
+
+        // if file uploaded to server and state updated ok
+        if (await addLayerImage(img, layerUid, onOk)) {
+            // remove from uploading list as it was added to main state in addLayerImage(...)
+            
         } else {
             onUploadError();
             return
@@ -120,24 +127,6 @@ export default function Layers()
         setUploadState(newState)
     }
 
-    // const onFileUploaded = (layerUid:string, imageUid:string) => {
-    //     let newState = {...uploadState}
-
-    //     const ld = newState[layerUid];
-
-    //     let index = 0;
-    //     for(let i = 0; i < ld.length; ++i) {
-    //         if (ld[i].image.fileUid === imageUid) {
-    //             index = i
-    //             break
-    //         }
-    //     }
-
-    //     newState[layerUid][index].isUploading = false;
-
-    //     setUploadState(newState)
-    // }
-
     const handleNewFiles = async (files:any[], layerUid:string) => {
         let newState = {...uploadState}
 
@@ -148,8 +137,6 @@ export default function Layers()
         for(let i = 0; i < files.length; ++i) {
             const file = files[i]
             const fileUid = uuidv4()
-
-            console.log('File uid generated: ' + fileUid)
 
             newState[layerUid].push({
                 image: {
@@ -177,22 +164,74 @@ export default function Layers()
         }
 
         viewData.push(
-            <LayerBlock item={item} key={index} index={index} onFilesAdded={handleNewFiles} uploadingImages={uploadingImages} />
+            <LayerBlock item={item} key={item.uid} index={index} onFilesAdded={handleNewFiles} uploadingImages={uploadingImages} />
         );
     });
 
     const onCreateNewLayer = () => {
         setLayerNameModalProps({
             createMode: true, 
-            onOkAction: addLayer
+            onOkAction: async (layerName:string) => {
+                const exists = layerData.findIndex(x => x.layerName === layerName) > 0;
+
+
+                if (exists) {
+                    chakraToast({
+                        title: `Name exists`,
+                        position: 'bottom',
+                        status: 'error',
+                        isClosable: true,
+                        duration: 2500,
+                      })
+                    return
+                }
+
+                //@ts-ignore
+                const toastId = toast(<ToastComponent msg='Adding layer...' isLoading={true} toastId={uuidv4()} />);
+
+                const res = await addLayer(layerName);
+                toast.dismiss(toastId);
+
+                if (res) {
+                    chakraToast({
+                        title: `Layer created`,
+                        position: 'bottom',
+                        status: 'success',
+                        isClosable: true,
+                        duration: 2500,
+                      })
+                } else {
+                    chakraToast({
+                        title: `Failed to create layer`,
+                        position: 'bottom',
+                        status: 'error',
+                        isClosable: true,
+                        duration: 2500,
+                      })
+                }
+            }
         })
     };
+
+    const ToastComponent = ({ closeToast, toastProps, msg, isLoading }:{closeToast:any, toastProps:any, msg:string, isLoading:boolean}) => (
+        <Flex flexDir='row' alignItems='center'  gap={25} >
+          {isLoading && (<Spinner color='green'/>)}
+          <Text fontWeight='bold'>{msg}</Text>
+        </Flex>
+      )
 
    
 
     return (
         <Flex dir='row'> 
             <ChangeLayerNameModal  />
+
+            <ToastContainer
+                position="bottom-right"
+                closeButton={false} 
+                transition={Slide}
+            />
+
 
            <Sidebar/>
 

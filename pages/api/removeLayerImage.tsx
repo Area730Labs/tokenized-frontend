@@ -12,6 +12,9 @@ export type RemoveLayerImageArgs = {
 
 
 export default withApiAuth(async function ProtectedRoute(req, res, supabase) {
+    let start = performance.now();
+
+
     if (req.method !== 'POST') {
         res.status(405).send({ message: 'Only POST requests allowed' })
         return
@@ -43,6 +46,9 @@ export default withApiAuth(async function ProtectedRoute(req, res, supabase) {
     .storage
     .from('layer-images')
     .remove([reqData.imageId])
+
+    console.log(`function removeLayerImage took ${(performance.now() - start).toFixed(3)}ms`);
+
 
     res.status(200).json([])
 })

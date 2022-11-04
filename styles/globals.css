@@ -23,3 +23,8 @@ a {
     background: black;
   }
 }
+
+
+.Toastify__toast-container--bottom-right {
+  --toastify-toast-width: 270px;
+}

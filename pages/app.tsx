@@ -219,8 +219,6 @@ export const getServerSideProps = withPageAuth({
             data: { user },
           } = await supabase.auth.getUser()
 
-        console.log(user?.id)
-        
         const { data } = await supabase.from('Project').select('*').eq('owner_uid', user?.id);
 
         return { props: { data } }
