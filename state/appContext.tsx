@@ -22,7 +22,7 @@ export interface AppContextType
     removeLayer: (layerId: string) => Promise<boolean>,
     moveLayerUp: (layerIndex: number) => void,
     moveLayerDown: (layerIndex: number) => void,
-    renameLayer: (layerIndex: number, newName: string) => void,
+    renameLayer: (layerIndex: number, newName: string) => Promise<boolean>,
     removeLayerImage: (layerUid:string, imageUid: string) => Promise<boolean>
 
     // Layer name modal
@@ -44,13 +44,27 @@ export function AppProvider({ children }: { children: ReactNode; }) {
     const supabase = useSupabaseClient()
     const session = useSession()
 
+
+    const setLatestLayerData = async() => {
+        try {
+            const data = await getLayerData()
+            if (data) {
+                setLayerData(data)
+            } else {
+                setLayerData([])
+            }
+        } catch (err) {
+            setLayerData([])
+        }   
+    }
+
     const updateData = async() => {
         const {data: { user },} = await supabase.auth.getUser()
         const { data:projectData } = await supabase.from('Project').select('*').eq('owner_uid', user?.id);
         
         if (projectData && projectData.length > 0){
             const proj = projectData[0];
-            setLayerData(await getLayerData())
+            await setLatestLayerData()
             setProjectId(proj.id)
         }
     }
@@ -124,22 +138,15 @@ export function AppProvider({ children }: { children: ReactNode; }) {
             return false;
         }
 
-        setLayerData(await getLayerData())
+        await setLatestLayerData()
 
         return true
     };
 
     const addLayer = async (layerName: string):Promise<boolean> => {
-        let exists = false;
-
-        layerData.forEach((layer) => {
-            if (layer.layerName === layerName) {
-                exists = true;
-            }
-        })
+        let exists = layerData.findIndex(x => x.layerName === layerName) >= 0;
 
         if (exists){
-            alert('Layer with this name already exists')
             return false;
         }
 
@@ -150,7 +157,7 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         }];
 
         if (await updateLayerData(newLayers)){
-            setLayerData(await getLayerData())
+            await setLatestLayerData()
             return true;
         } else {
             alert('Failed to update layers data')
@@ -165,7 +172,7 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         newArr[layerIndex - 1] = tmp;
 
         if (await updateLayerData(newArr)){
-            setLayerData(await getLayerData())
+            await setLatestLayerData()
         } else {
             alert('Failed to update layers data')
         }
@@ -178,20 +185,27 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         newArr[layerIndex + 1] = tmp;
 
         if (await updateLayerData(newArr)){
-            setLayerData(await getLayerData())
+            await setLatestLayerData()
         } else {
             alert('Failed to update layers data')
         }
     };
 
-    const renameLayer = async (layerIndex: number, newName: string) => {
+    const renameLayer = async (layerIndex: number, newName: string):Promise<boolean> => {
+        const nameExists = layerData.findIndex(x => x.layerName === newName) >= 0;
+        if (nameExists) {
+            return false;
+        }
+
         let newArr = [...layerData];
         newArr[layerIndex].layerName = newName;
 
         if (await updateLayerData(newArr)){
-            setLayerData(await getLayerData())
+            await setLatestLayerData()
+            return true
         } else {
             alert('Failed to update layers data')
+            return false
         }
     }
 
@@ -235,7 +249,7 @@ export function AppProvider({ children }: { children: ReactNode; }) {
 
         onOk()
 
-        setLayerData(await getLayerData())
+        await setLatestLayerData()
 
         return true;
     }
@@ -258,7 +272,7 @@ export function AppProvider({ children }: { children: ReactNode; }) {
             return false;
         }
 
-        setLayerData(await getLayerData())
+        await setLatestLayerData()
         
 
         return true
@@ -282,7 +296,7 @@ export function AppProvider({ children }: { children: ReactNode; }) {
             return false;
         }
 
-        setLayerData(await getLayerData())
+        await setLatestLayerData()
         
         return true
     }

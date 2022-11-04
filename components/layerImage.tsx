@@ -36,9 +36,7 @@ export default function LayerImage(props: ImageProps) {
         }
     }
 
-    const handleChange = (event:any) => {
-        event.target.value
-    }
+
 
     return (
         <Flex onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}  backgroundColor='#21212105' marginTop='5px' marginBottom='7px'  width='100%' flexDir='row' alignItems='center'  gap='10px' border='1px solid #f0f0f0' padding='7px' borderRadius='5px' >
@@ -51,23 +49,7 @@ export default function LayerImage(props: ImageProps) {
             <Text>{img.imageName}</Text>
             <Spacer/>
             {!props.isUploading && !isRemoving && !props.uploadError && (
-                <>
-                {/* <Flex cursor='pointer' flexDir='row' gap={2} backgroundColor='#f1f1f1' padding='5px' paddingLeft='8px' paddingRight='8px' borderRadius='5px' alignItems='center'>
-                    Rarity %:
-                    <Text>{img.rarity}</Text>
-                    <Icon as={BiPencil} w={4} h={4} color='#4a4a4a' />
-                </Flex> */}
-
-                <RarityView rarity={img.rarity} imageUid={img.fileUid} layerUid={props.layerUid} />
-                    
-                    {/* <Input placeholder='0' type="number" value={img.rarity} onChange={(e) => {}} width='60px'/> */}
-
-                    {/* <Flex onClick={(e) => {alert(1); e.preventDefault();}} backgroundColor='#ededed' width='40px' height='40px' marginLeft='0px' borderRadius='5px' alignItems='center' justifyContent='center' cursor='pointer'>
-                        <Icon as={BiLockOpenAlt} w={5} h={5} color='#4a4a4a' />
-                    </Flex> */}
-
-                   
-                </>
+                 <RarityView rarity={img.rarity} imageUid={img.fileUid} layerUid={props.layerUid} />
             )}
 
             {props.isUploading && !props.uploadError && (

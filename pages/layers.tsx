@@ -171,26 +171,12 @@ export default function Layers()
     const onCreateNewLayer = () => {
         setLayerNameModalProps({
             createMode: true, 
-            onOkAction: async (layerName:string) => {
-                const exists = layerData.findIndex(x => x.layerName === layerName) > 0;
-
-
-                if (exists) {
-                    chakraToast({
-                        title: `Name exists`,
-                        position: 'bottom',
-                        status: 'error',
-                        isClosable: true,
-                        duration: 2500,
-                      })
-                    return
-                }
-
-                //@ts-ignore
-                const toastId = toast(<ToastComponent msg='Adding layer...' isLoading={true} toastId={uuidv4()} />);
+            onOkAction: async (layerName:string):Promise<boolean> => {
+                // //@ts-ignore
+                // const toastId = toast(<ToastComponent msg='Adding layer...' isLoading={true} toastId={uuidv4()} />);
 
                 const res = await addLayer(layerName);
-                toast.dismiss(toastId);
+                // toast.dismiss(toastId);
 
                 if (res) {
                     chakraToast({
@@ -199,16 +185,12 @@ export default function Layers()
                         status: 'success',
                         isClosable: true,
                         duration: 2500,
-                      })
-                } else {
-                    chakraToast({
-                        title: `Failed to create layer`,
-                        position: 'bottom',
-                        status: 'error',
-                        isClosable: true,
-                        duration: 2500,
-                      })
-                }
+                    })    
+
+                    return true
+                } 
+
+                return false
             }
         })
     };

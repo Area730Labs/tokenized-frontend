@@ -130,7 +130,7 @@ export default function LayerBlock(props: Props)
 
 
         //@ts-ignore
-        toastId.current = toast(<ToastComponent autoClose={false} toastId={props.item.uid} />);
+        // toastId.current = toast(<ToastComponent autoClose={false} toastId={props.item.uid} />);
 
         const response = await removeLayer(item.uid)
 
@@ -189,7 +189,7 @@ export default function LayerBlock(props: Props)
                     <AccordionIcon />
 
                     <Box flex='1' textAlign='left' marginLeft='10px'>
-                    {item.layerName}
+                    {item.layerName} ({item.images.length} images)
                     </Box>
 
                     {isHover && !isRemoving && props.index > 0 && (

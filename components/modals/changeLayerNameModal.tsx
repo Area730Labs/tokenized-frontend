@@ -10,11 +10,12 @@ import {
     FormLabel,
     Button,
     Input,
-    useDisclosure
+    useDisclosure,
+    Spinner
 } from '@chakra-ui/react'
 import { useEffect, useRef, useState } from 'react'
 import { useAppContext } from '../../state/appContext'
-
+import { useToast } from '@chakra-ui/react'
 
 export interface IChangeLayerNameModalProps {
     createMode: boolean, 
@@ -24,11 +25,12 @@ export interface IChangeLayerNameModalProps {
 
 export default function ChangeLayerNameModal() {
     const {layerNameModalProps, setLayerNameModalProps} = useAppContext()
-
+    const toast = useToast()
     const initialRef = useRef(null)
     const [value, setValue] = useState('')
     const handleChange = (event:any) => setValue(event.target.value)
     const {isOpen, onOpen, onClose} =  useDisclosure()
+    const [isLoading, setIsLoading] = useState(false)
 
     useEffect(() => {
         if (!isOpen) {
@@ -47,14 +49,30 @@ export default function ChangeLayerNameModal() {
         }
     }, [layerNameModalProps])
 
-    const onOk = () => {
+    const onOk = async () => {
         if (value.trim()) {
-            layerNameModalProps?.onOkAction(value)
-            onClose()
+            setIsLoading(true)
+
+            if (await layerNameModalProps?.onOkAction(value)) {
+                onClose()
+            } else {
+                toast({
+                    title: 'Name already exists',
+                    status: 'error',
+                    duration: 2400,
+                    isClosable: true,
+                })
+            }
+
+            setIsLoading(false)
         }
     };
 
     const onCloseDialog = () => {
+        if (isLoading) {
+            return
+        }
+        
         setLayerNameModalProps(null);
         onClose()
     }
@@ -82,10 +100,15 @@ export default function ChangeLayerNameModal() {
             </ModalBody>
 
             <ModalFooter>
-                <Button colorScheme='blue' mr={3} onClick={onOk}>
-                {okActionLabel}
+                <Button colorScheme='blue' mr={3} onClick={onOk} isDisabled={isLoading}>
+                {!isLoading && (
+                    <>{okActionLabel}</>
+                )}
+
+                {isLoading && <Spinner size='md'/>}
+                
                 </Button>
-                <Button onClick={onCloseDialog}>Cancel</Button>
+                <Button onClick={onCloseDialog} isDisabled={isLoading}>Cancel</Button>
             </ModalFooter>
             </ModalContent>
         </Modal>
