@@ -156,7 +156,8 @@ export default function Layers()
         setUploadState(newState)
     }
 
-    console.log(JSON.stringify(layerData))
+    // console.log(JSON.stringify(layerData))
+
     layerData?.map((item, index) => {
         let uploadingImages:UploadingImage[] = [];
 
@@ -224,9 +225,9 @@ export default function Layers()
                 <Flex width='750px' flexDir='row'>
                     {!isPublished && (
                         <>
-                            <Button size='sm' leftIcon={<Icon as={BiLayer} w={5} h={5} color='#ffffff' />} colorScheme='blue' variant='solid'>
+                            {/* <Button size='sm' leftIcon={<Icon as={BiLayer} w={5} h={5} color='#ffffff' />} colorScheme='blue' variant='solid'>
                                 Generate NFTs
-                            </Button>
+                            </Button> */}
 
                             <Spacer/>
                             <Button onClick={() => onCreateNewLayer()} size='sm' leftIcon={<Icon as={BiAddToQueue} w={5} h={5} color='#ffffff' />} colorScheme='green' variant='solid'>

@@ -71,31 +71,31 @@ export function AppProvider({ children }: { children: ReactNode; }) {
     }
 
 
-    useEffect(() => {
-        if (projectId < 0) {
-            return;
-        }
+    // useEffect(() => {
+    //     if (projectId < 0) {
+    //         return;
+    //     }
 
-        const subChannel = supabase
-        .channel('public:Project')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'Project', filter:`id=${projectId}` }, payload => {
-          console.log('Change received!', payload)
-        })
-        .subscribe()
+    //     const subChannel = supabase
+    //     .channel('public:Project')
+    //     .on('postgres_changes', { event: '*', schema: 'public', table: 'Project', filter:`id=${projectId}` }, payload => {
+    //       console.log('Change received!', payload)
+    //     })
+    //     .subscribe()
 
-        const { data: authListener } = supabase.auth.onAuthStateChange(
-            (event, session) => {
-              if (event === "SIGNED_OUT") {
-                setProjectId(-1)
-              }
-            }
-          );
+    //     const { data: authListener } = supabase.auth.onAuthStateChange(
+    //         (event, session) => {
+    //           if (event === "SIGNED_OUT") {
+    //             setProjectId(-1)
+    //           }
+    //         }
+    //       );
       
-          return () => {
-            authListener.subscription.unsubscribe()
-            supabase.removeAllChannels();
-          };
-    }, [projectId])
+    //       return () => {
+    //         authListener.subscription.unsubscribe()
+    //         supabase.removeAllChannels();
+    //       };
+    // }, [projectId])
 
     useEffect(() => {
         updateData()

@@ -4,7 +4,8 @@ import {
     Icon,
     Input,
     useToast,
-    Spinner
+    Spinner,
+    Tooltip
 } from "@chakra-ui/react"
 import { useState } from "react";
 import 
@@ -37,7 +38,7 @@ export default function RarityView(props:Props){
         const rawVal = event.target.value
         const val = parseFloat(rawVal)
 
-        if (isNaN(val) || val < 0 || val > 100){
+        if (isNaN(val) || val < 0 ){
             setHasError(true)
         } else {
             setHasError(false)
@@ -46,20 +47,20 @@ export default function RarityView(props:Props){
         const layerIndex = layerData.findIndex(x => x.uid === props.layerUid);
         const layer = layerData[layerIndex]
 
-        let layerRarityTotal = 0;
-        for(let i=0; i < layer.images.length; ++i){
-            const img = layer.images[i]
+        // let layerRarityTotal = 0;
+        // for(let i=0; i < layer.images.length; ++i){
+        //     const img = layer.images[i]
 
-            if (img.fileUid === props.imageUid) {
-                layerRarityTotal += val
-            } else {
-                layerRarityTotal += img.rarity  
-            }
-        }
+        //     if (img.fileUid === props.imageUid) {
+        //         layerRarityTotal += val
+        //     } else {
+        //         layerRarityTotal += img.rarity  
+        //     }
+        // }
 
-        if (layerRarityTotal > 100) {
-            setHasError(true)
-        }
+        // if (layerRarityTotal > 100) {
+        //     setHasError(true)
+        // }
 
         setValue(rawVal)
     }
@@ -110,7 +111,10 @@ export default function RarityView(props:Props){
     return (
         <>
             <Flex  flexDir='row' gap={2} backgroundColor='#f1f1f1' padding='5px' paddingLeft='8px' paddingRight='8px' borderRadius='5px' alignItems='center'>
-                Rarity %:
+                <Tooltip label='Rarity weight'>
+                    <Text fontSize='15px'>Weight:</Text>
+                </Tooltip>
+                
 
                 {!isEdit && (
                     <>
@@ -124,7 +128,7 @@ export default function RarityView(props:Props){
 
                 {isEdit && (
                     <>
-                        <Input isDisabled={isUpading} placeholder='...' isInvalid={hasError} type="number"  height='30px' value={value} onChange={handleChange} width='60px'  focusBorderColor={hasError?'#d42e22':'#49b9de'} />
+                        <Input isDisabled={isUpading} placeholder='...' isInvalid={hasError} type="number"  height='30px' value={value} onChange={handleChange} width='70px'  focusBorderColor={hasError?'#d42e22':'#49b9de'} />
 
                         {!isUpading && (
                             <>
