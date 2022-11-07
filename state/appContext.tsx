@@ -13,7 +13,7 @@ import { AddLayerImageArgs } from "../pages/api/addLayerImage";
 import { RemoveLayerImageArgs } from "../pages/api/removeLayerImage";
 import { RemoveLayerArgs } from "../pages/api/removeLayer";
 import { SetImageRarityArgs } from "../pages/api/setImageRarity";
-
+import { SetImageNameArgs } from "../pages/api/setImageName";
 
 export interface AppContextType 
 {
@@ -31,7 +31,8 @@ export interface AppContextType
 
     isPublished: boolean,
     addLayerImage: (uploadImage:UploadingImage, layerUid:string, onOk:()=>void) => Promise<boolean>,
-    updateLayerImage: (imageUid:string, rarity:number) => Promise<boolean>
+    updateLayerImage: (imageUid:string, rarity:number) => Promise<boolean>,
+    updateLayerImageName: (imageUid:string, imageName:string) => Promise<boolean>
 }
 
 const AppContext = createContext<AppContextType>({} as AppContextType);
@@ -301,6 +302,29 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         return true
     }
 
+    const updateLayerImageName = async(imageUid:string, imageName:string): Promise<boolean> => {
+        const reqData:SetImageNameArgs = {
+            imageUid,
+            imageName
+        }
+
+        const res = await fetch('/api/setImageName', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(reqData),
+        })
+
+        if (res.status !== 200){
+            return false;
+        }
+
+        await setLatestLayerData()
+        
+        return true
+    }
+
     
    
     const ctxVal:AppContextType = {
@@ -315,7 +339,8 @@ export function AppProvider({ children }: { children: ReactNode; }) {
         isPublished: published,
         addLayerImage,
         removeLayerImage,
-        updateLayerImage
+        updateLayerImage,
+        updateLayerImageName
     } ;
 
     return (

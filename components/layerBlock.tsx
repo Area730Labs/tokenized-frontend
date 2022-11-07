@@ -189,7 +189,7 @@ export default function LayerBlock(props: Props)
                     <AccordionIcon />
 
                     <Box flex='1' textAlign='left' marginLeft='10px'>
-                    {item.layerName} ({item.images.length} images)
+                    {item.layerName} ({item.images.length})
                     </Box>
 
                     {isHover && !isRemoving && props.index > 0 && (

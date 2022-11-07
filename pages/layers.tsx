@@ -156,6 +156,7 @@ export default function Layers()
         setUploadState(newState)
     }
 
+    console.log(JSON.stringify(layerData))
     layerData?.map((item, index) => {
         let uploadingImages:UploadingImage[] = [];
 

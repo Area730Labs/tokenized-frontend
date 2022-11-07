@@ -11,6 +11,8 @@ import
 import { ILayerImage } from "../state/layerState";
 import { ToastContainer, toast } from 'react-toastify';
 import RarityView from "./rarityView";
+import FieldWithRename from '../components/fieldWithRename'
+import {useAppContext} from '../state/appContext'
 
 type ImageProps = {
     item: ILayerImage, 
@@ -27,7 +29,7 @@ export default function LayerImage(props: ImageProps) {
     const img = props.item;
     const [isRemoving, setIsRemoving] = useState(false);
     const [isHover, setHover] = useState(false);
-
+    const {updateLayerImageName} = useAppContext()
 
     const onRemove = async () => {
         if (props.onRemoveLayerImage) {
@@ -36,18 +38,34 @@ export default function LayerImage(props: ImageProps) {
         }
     }
 
+    const onUpdateName = async(newName:string):Promise<boolean> => {
+        return await updateLayerImageName(props.item.fileUid, newName)
+    }
 
+    const validateName = (newName:string):boolean => {
+        if (!newName.trim()){
+            return false
+        }
+        
+        return true
+    }
 
     return (
         <Flex onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}  backgroundColor='#21212105' marginTop='5px' marginBottom='7px'  width='100%' flexDir='row' alignItems='center'  gap='10px' border='1px solid #f0f0f0' padding='7px' borderRadius='5px' >
-             {isHover && !isRemoving && (
-                <Flex cursor='pointer' onClick={(e) => {onRemove(); e.preventDefault();}} backgroundColor='#f03426' width='35px' height='35px' marginLeft='10px' borderRadius='5px' alignItems='center' justifyContent='center'>
-                    <Icon as={BiTrashAlt} w={4} h={4} color='#ffffff' />
-                </Flex>
+             {isHover && !isRemoving && !props.isUploading && (
+                <>
+                    <Flex cursor='pointer' onClick={(e) => {onRemove(); e.preventDefault();}} backgroundColor='#f03426' width='35px' height='35px' marginLeft='10px' borderRadius='5px' alignItems='center' justifyContent='center'>
+                        <Icon as={BiTrashAlt} w={4} h={4} color='#ffffff' />
+                    </Flex>
+                </>
             )}
+
             <Image src={img.url} height='40px' borderRadius='4px'/>
-            <Text>{img.imageName}</Text>
+
+            <FieldWithRename fieldValue={img.imageName} onUpdate={onUpdateName} validateValue={validateName} />
+
             <Spacer/>
+
             {!props.isUploading && !isRemoving && !props.uploadError && (
                  <RarityView rarity={img.rarity} imageUid={img.fileUid} layerUid={props.layerUid} />
             )}
